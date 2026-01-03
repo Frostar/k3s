@@ -1,0 +1,28 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: security-headers
+  namespace: default
+spec:
+  headers:
+    # HTTP Strict Transport Security (HSTS)
+    # stsSeconds: 31536000 = 1 year (recommended minimum)
+    # stsIncludeSubdomains: true (protects all subdomains)
+    # stsPreload: true (allows inclusion in browser preload lists)
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    stsPreload: true
+    forceSTSHeader: true
+    # Additional security headers (best practices)
+    browserXssFilter: true
+    contentTypeNosniff: true
+    frameDeny: true
+    referrerPolicy: "strict-origin-when-cross-origin"
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"
+    customResponseHeaders:
+      X-Content-Type-Options: "nosniff"
+      X-Frame-Options: "DENY"
+      X-XSS-Protection: "1; mode=block"
+      Referrer-Policy: "strict-origin-when-cross-origin"
+      Permissions-Policy: "geolocation=(), microphone=(), camera=()"

@@ -1,0 +1,29 @@
+# Amidumb Ingress
+# Service running in public-sites namespace via LoadBalancer (MetalLB)
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: amidumb
+  namespace: public-sites
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - amidumb.com
+    secretName: amidumb-tls
+  rules:
+  - host: amidumb.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: amidumb-svc
+            port:
+              number: 80

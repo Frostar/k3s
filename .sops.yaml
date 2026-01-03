@@ -1,0 +1,9 @@
+creation_rules:
+  - path_regex: secrets/.*\.(ya?ml)$
+    encrypted_regex: '^(data|stringData|.*(password|token|secret).*)$'
+    age:
+      - "age16qvd0tlwjc33cy50qynsuy304hvmat48wxme6yvylk9hj8j8pd6sk6zaz5"
+  - path_regex: helm-values/.*/.*\.values\.ya?ml
+    encrypted_regex: '^(.*(password|token|secret|apiKey|accessKey|clientSecret).*)$'
+    age:
+      - "age16qvd0tlwjc33cy50qynsuy304hvmat48wxme6yvylk9hj8j8pd6sk6zaz5"

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: amidumb-svc
+  namespace: public-sites
+spec:
+  type: LoadBalancer
+  selector:
+    app: amidumb
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+

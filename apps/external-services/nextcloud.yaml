@@ -1,0 +1,63 @@
+# Nextcloud Service and Ingress
+# External service running at 192.168.10.249:30080
+
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: nextcloud-svc
+  namespace: default
+  labels:
+    kubernetes.io/service-name: nextcloud-svc
+addressType: IPv4
+endpoints:
+- addresses:
+  - "192.168.10.249"
+  conditions:
+    ready: true
+ports:
+- port: 30080
+  protocol: TCP
+  name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-svc
+  namespace: default
+spec:
+  type: ClusterIP
+  ports:
+  - port: 30080
+    targetPort: 30080
+    protocol: TCP
+    name: http
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers-nextcloud@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    # Uncomment to protect with Authentik (chain with security headers):
+    # traefik.ingress.kubernetes.io/router.middlewares: default-security-headers-nextcloud@kubernetescrd,authentik-authentik@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - nextcloud.j-frost.dk
+    secretName: nextcloud-tls
+  rules:
+  - host: nextcloud.j-frost.dk
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nextcloud-svc
+            port:
+              number: 30080

@@ -1,0 +1,199 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: littlelink-images
+  namespace: public-sites
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Mi
+  storageClassName: longhorn
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: littlelink-server
+  namespace: public-sites
+  labels:
+    app: littlelink-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: littlelink-server
+  template:
+    metadata:
+      labels:
+        app: littlelink-server
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+      - name: download-images
+        image: alpine:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Downloading images to PVC..."
+          apk add --no-cache wget
+          mkdir -p /mnt/images
+          cd /mnt/images
+          # Only download if files don't exist to preserve existing content
+          if [ ! -f favicon.png ]; then
+            echo "Downloading favicon.png..."
+            wget -O favicon.png https://blog.j-frost.dk/favicon.png
+          else
+            echo "favicon.png already exists, skipping download"
+          fi
+          if [ ! -f crop-square.jpg ]; then
+            echo "Downloading crop-square.jpg..."
+            wget -O crop-square.jpg https://blog.j-frost.dk/content/images/2019/11/crop-square.jpg
+          else
+            echo "crop-square.jpg already exists, skipping download"
+          fi
+          echo "Contents of /mnt/images:"
+          ls -lh
+        volumeMounts:
+        - name: static-media
+          mountPath: /mnt/images
+      volumes:
+      - name: static-media
+        persistentVolumeClaim:
+          claimName: littlelink-images
+      containers:
+      - name: littlelink-server
+        image: ghcr.io/techno-tim/littlelink-server:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        volumeMounts:
+        - name: static-media
+          mountPath: /usr/src/app/build/public/static/media/custom
+        env:
+        - name: META_TITLE
+          value: "Jens Frost Lunding"
+        - name: META_DESCRIPTION
+          value: "Jens Frost Lunding link page"
+        - name: META_AUTHOR
+          value: "Jens Frost Lunding"
+        - name: LANG
+          value: "en"
+        - name: META_INDEX_STATUS
+          value: "all"
+        - name: THEME
+          value: "Dark"
+        - name: FAVICON_URL
+          value: "https://j-frost.dk/static/media/custom/favicon.png"
+        - name: AVATAR_URL
+          value: "https://j-frost.dk/static/media/custom/crop-square.jpg"
+        - name: AVATAR_2X_URL
+          value: "https://j-frost.dk/static/media/custom/crop-square.jpg"
+        - name: AVATAR_ALT
+          value: "Frostar Avator"
+        - name: OG_SITE_NAME
+          value: "Jens Frost Lunding"
+        - name: OG_TITLE
+          value: "Jens Frost Lunding"
+        - name: OG_DESCRIPTION
+          value: "Jens Frost Lunding link page"
+        - name: OG_URL
+          value: "https://j-frost.dk"
+        - name: OG_IMAGE
+          value: "https://j-frost.dk/static/media/custom/crop-square.jpg"
+        - name: OG_IMAGE_WIDTH
+          value: "400"
+        - name: OG_IMAGE_HEIGHT
+          value: "400"
+        - name: TWITTER_CARD
+          value: "Jens Frost Lunding"
+        - name: TWITTER_IMAGE
+          value: "https://j-frost.dk/static/media/custom/crop-square.jpg"
+        - name: TWITTER_SITE
+          value: "@Jens_Frost"
+        - name: TWITTER_CREATOR
+          value: "@Jens_Frost"
+        - name: NAME
+          value: "Jens Frost Lunding"
+        - name: BIO
+          value: "Software engineer | Tinker of homelab | Casual gamer | Enjoyer of good beers"
+        - name: FOOTER
+          value: "Jens Frost © 2026"
+        - name: GITHUB
+          value: "https://github.com/Frostar"
+        - name: GHOST
+          value: "https://blog.j-frost.dk"
+        - name: TWITTER
+          value: "https://twitter.com/Jens_Frost"
+        - name: DISCORD
+          value: "https://discordapp.com/users/182067317973188608"
+        - name: LINKED_IN
+          value: "https://linkedin.com/in/jensfrost"
+        - name: SNAPCHAT
+          value: "https://www.snapchat.com/add/jens_frost"
+        - name: SPOTIFY
+          value: "https://open.spotify.com/user/113319051"
+        - name: EMAIL
+          value: "post@j-frost.dk"
+        - name: EMAIL_TEXT
+          value: "Email Me!"
+        - name: SOUND_CLOUD
+          value: "https://soundcloud.com/jens-frost"
+        - name: LASTFM
+          value: "https://www.last.fm/user/Jens_Frost"
+        - name: STEAM
+          value: "https://steamcommunity.com/id/Frostarz"
+        - name: BLUESKY
+          value: "https://bsky.app/profile/frostarz.bsky.social"
+        - name: MASTODON
+          value: "https://infosec.exchange/@frostar"
+        - name: BUTTON_ORDER
+          value: "EMAIL,GITHUB,GHOST,LINKED_IN,BLUESKY,MASTODON,TWITTER,STEAM,DISCORD,LASTFM,SNAPCHAT,INSTAGRAM,UNTAPPD,SPOTIFY,BBG,SOUND_CLOUD"
+        - name: UNTAPPD
+          value: "https://untappd.com/user/Frostarz"
+        - name: CUSTOM_BUTTON_TEXT
+          value: "Am I Dumb?,BoardGameGeek"
+        - name: CUSTOM_BUTTON_URL
+          value: "https://amidumb.com,https://www.boardgamegeek.com/user/Frostar"
+        - name: CUSTOM_BUTTON_COLOR
+          value: "#4D4D4D,#3E3A5E"
+        - name: CUSTOM_BUTTON_TEXT_COLOR
+          value: "#FFFFFF,#FFFFFF"
+        - name: CUSTOM_BUTTON_ALT_TEXT
+          value: "Am I dumb?,BoardGameGeek"
+        - name: CUSTOM_BUTTON_NAME
+          value: "AMIDUMB,BBG,BEREAL"
+        - name: CUSTOM_BUTTON_ICON
+          value: "fas question-circle,fas game-board"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: littlelink-svc
+  namespace: public-sites
+spec:
+  type: LoadBalancer
+  selector:
+    app: littlelink-server
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http

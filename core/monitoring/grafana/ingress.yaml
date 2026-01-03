@@ -1,0 +1,41 @@
+# Grafana Service - LoadBalancer Configuration
+# Grafana is exposed via MetalLB LoadBalancer instead of Ingress
+# IP Address: 192.168.10.125 (from MetalLB pool: 192.168.10.120-192.168.10.129)
+#
+# To apply this configuration:
+# kubectl patch svc prometheus-stack-grafana -n monitoring -p '{"spec":{"type":"LoadBalancer","loadBalancerIP":"192.168.10.125"}}'
+#
+# To switch back to ClusterIP:
+# kubectl patch svc prometheus-stack-grafana -n monitoring -p '{"spec":{"type":"ClusterIP"}}'
+#
+# To create an Ingress instead (if needed later):
+# Uncomment the Ingress configuration below and apply it
+
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: grafana
+#   namespace: monitoring
+#   annotations:
+#     traefik.ingress.kubernetes.io/router.entrypoints: websecure
+#     traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+#     # Uncomment the line below to enable Authentik authentication (chain with security headers):
+#     # traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd,authentik-authentik@kubernetescrd
+#     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+# spec:
+#   ingressClassName: traefik
+#   tls:
+#   - hosts:
+#     - grafana.j-frost.dk  # CHANGE THIS to your domain if different
+#     secretName: grafana-tls
+#   rules:
+#   - host: grafana.j-frost.dk  # CHANGE THIS to your domain if different
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: prometheus-stack-grafana
+#             port:
+#               number: 80

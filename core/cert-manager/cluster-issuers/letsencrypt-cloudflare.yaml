@@ -1,0 +1,32 @@
+# Cloudflare DNS-01 Challenge Configuration
+# This matches your Docker Compose setup and uses DNS-01 challenge
+#
+# Benefits:
+#   - Works without requiring port 80 to be accessible
+#   - Supports wildcard certificates (*.yourdomain.com)
+#   - Matches your existing Docker setup
+#   - More flexible for future needs
+#
+# Prerequisites:
+#   - Apply cloudflare-secrets.yaml FIRST to create the secret
+#   - Then apply this file to create the ClusterIssuer
+#
+# Apply this AFTER cloudflare-secrets.yaml
+
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-cloudflare
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: cert@j-frost.dk  # From Docker setup
+    privateKeySecretRef:
+      name: letsencrypt-cloudflare
+    solvers:
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            name: cloudflare-api-token
+            key: api-token

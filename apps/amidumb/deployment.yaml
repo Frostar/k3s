@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amidumb
+  namespace: public-sites
+  labels:
+    app: amidumb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: amidumb
+  template:
+    metadata:
+      labels:
+        app: amidumb
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: amidumb
+        image: ghcr.io/frostar/amidumb:latest
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+

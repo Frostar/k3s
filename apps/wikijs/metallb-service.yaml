@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wiki-metallb
+  namespace: wikijs
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: wiki
+    app.kubernetes.io/instance: wiki
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+

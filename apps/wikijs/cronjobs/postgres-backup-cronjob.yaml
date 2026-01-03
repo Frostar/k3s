@@ -1,0 +1,85 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wiki-postgres-backup
+  namespace: wikijs
+spec:
+  schedule: "30 5 * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app: postgres-backup
+            backup-type: single-database
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: postgres-backup
+            image: ghcr.io/frostar/postgre-backup:latest
+            env:
+            - name: PGHOST
+              value: "postgresql.wikijs.svc.cluster.local"
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: wikijs-secrets
+                  key: POSTGRES_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wikijs-secrets
+                  key: POSTGRES_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: wikijs-secrets
+                  key: POSTGRES_DB
+            - name: BACKUP_S3_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-secrets
+                  key: BACKUP_S3_KEY
+            - name: BACKUP_S3_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-secrets
+                  key: BACKUP_S3_SECRET
+            - name: BACKUP_S3_PATH
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-secrets
+                  key: BACKUP_S3_PATH
+            - name: BACKUP_S3_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-secrets
+                  key: BACKUP_S3_HOST
+                  optional: true
+            - name: BACKUP_S3_HOST_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-secrets
+                  key: BACKUP_S3_HOST_BUCKET
+                  optional: true
+            - name: BACKUP_NO_SSL
+              value: "true"
+            - name: TZ
+              value: "Europe/Copenhagen"
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1000
+              allowPrivilegeEscalation: false
+          securityContext:
+            fsGroup: 1000
+

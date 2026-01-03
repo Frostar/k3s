@@ -1,0 +1,135 @@
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi
+          storageClassName: longhorn
+  enabled: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    configReloaders: true
+    etcd: false
+    general: true
+    k8sContainerCpuUsageSecondsTotal: true
+    k8sContainerMemoryCache: true
+    k8sContainerMemoryRss: true
+    k8sContainerMemorySwap: true
+    k8sContainerMemoryWorkingSetBytes: true
+    k8sContainerResource: true
+    k8sPodOwner: true
+    kubeApiserverAvailability: true
+    kubeControllerManager: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubeProxy: true
+    kubeSchedulerAlerting: true
+    kubeSchedulerRecording: true
+    kubeStateMetrics: true
+    kubelet: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
+grafana:
+  adminPassword: admin
+  adminUser: admin
+  defaultDashboardsEnabled: true
+  enabled: true
+  persistence:
+    accessModes:
+    - ReadWriteOnce
+    enabled: true
+    size: 5Gi
+    storageClassName: longhorn
+    type: pvc
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  service:
+    port: 80
+    type: ClusterIP
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+kubeStateMetrics:
+  enabled: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+nodeExporter:
+  enabled: true
+prometheus:
+  enabled: true
+  prometheusSpec:
+    additionalScrapeConfigs: []
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+    retention: 15d
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+          storageClassName: longhorn
+prometheus-node-exporter:
+  extraArgs:
+  - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+  - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$
+  resources:
+    limits:
+      cpu: 100m
+      memory: 64Mi
+    requests:
+      cpu: 50m
+      memory: 32Mi
+prometheusOperator:
+  enabled: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi

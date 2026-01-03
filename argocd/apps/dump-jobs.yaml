@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dump-jobs
+  namespace: argocd
+spec:
+  project: homelab
+  source:
+    repoURL: https://github.com/Frostar/k3s
+    targetRevision: HEAD
+    path: apps/dump-jobs
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: postgres-dump-jobs
+  syncPolicy: {}

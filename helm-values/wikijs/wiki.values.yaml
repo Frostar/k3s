@@ -1,0 +1,29 @@
+affinity: {}
+image:
+  pullPolicy: IfNotPresent
+  repository: requarks/wiki
+  tag: latest
+ingress:
+  enabled: false
+nodeSelector: {}
+postgresql:
+  enabled: false
+  existingSecret: wikijs-secrets
+  existingSecretKey: POSTGRES_PASSWORD
+  postgresqlDatabase: wiki
+  postgresqlHost: postgresql.wikijs.svc.cluster.local
+  postgresqlPassword: ""
+  postgresqlPort: 5432
+  postgresqlUser: wikijs
+  ssl: false
+replicaCount: 1
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+revisionHistoryLimit: 10
+schedulerName: ""
+tolerations: []
