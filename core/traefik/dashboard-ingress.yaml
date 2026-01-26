@@ -17,10 +17,10 @@ spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - traefik.j-frost.dk  # CHANGE THIS to your domain
+    - traefik.j-frost.dk
     secretName: traefik-dashboard-tls
   rules:
-  - host: traefik.j-frost.dk  # CHANGE THIS to your domain
+  - host: traefik.j-frost.dk
     http:
       paths:
       - path: /

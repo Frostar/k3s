@@ -5,7 +5,17 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-    - 192.168.10.120-192.168.10.150
+    - 192.168.10.121-192.168.10.150
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: traefik-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.10.120/32
+  autoAssign: false
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -14,4 +24,5 @@ metadata:
   namespace: metallb-system
 spec:
   ipAddressPools:
-  - default-pool
+    - default-pool
+    - traefik-pool
