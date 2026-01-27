@@ -1,0 +1,661 @@
+# Source: kube-prometheus-stack/templates/prometheus-operator/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus-stack-kube-prom-operator
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app: kube-prometheus-stack-operator
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator
+automountServiceAccountToken: true
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-stack-kube-prom-operator
+  labels:
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app: kube-prometheus-stack-operator
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator
+rules:
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers
+  - alertmanagers/finalizers
+  - alertmanagers/status
+  - alertmanagerconfigs
+  - prometheuses
+  - prometheuses/finalizers
+  - prometheuses/status
+  - prometheusagents
+  - prometheusagents/finalizers
+  - prometheusagents/status
+  - thanosrulers
+  - thanosrulers/finalizers
+  - thanosrulers/status
+  - scrapeconfigs
+  - scrapeconfigs/status
+  - servicemonitors
+  - servicemonitors/status
+  - podmonitors
+  - podmonitors/status
+  - probes
+  - probes/status
+  - prometheusrules
+  - prometheusrules/status
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - secrets
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - services/finalizers
+  - endpoints
+  verbs:
+  - get
+  - create
+  - update
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - patch
+  - create
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - get
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - get
+  - create
+  - list
+  - watch
+  - update
+  - delete
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-stack-kube-prom-operator
+  labels:
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app: kube-prometheus-stack-operator
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-stack-kube-prom-operator
+subjects:
+- kind: ServiceAccount
+  name: prometheus-stack-kube-prom-operator
+  namespace: monitoring
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-stack-kube-prom-operator
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app: kube-prometheus-stack-operator
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator
+spec:
+  ports:
+  - name: https
+    port: 443
+    targetPort: https
+  selector:
+    app: kube-prometheus-stack-operator
+    release: "prometheus-stack"
+  type: "ClusterIP"
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-stack-kube-prom-operator
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app: kube-prometheus-stack-operator
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: kube-prometheus-stack-operator
+      release: "prometheus-stack"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: prometheus-stack
+        app.kubernetes.io/version: "80.4.2"
+        app.kubernetes.io/part-of: kube-prometheus-stack
+        release: "prometheus-stack"
+        app: kube-prometheus-stack-operator
+        app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+        app.kubernetes.io/component: prometheus-operator
+    spec:
+      containers:
+        - name: kube-prometheus-stack
+          image: "quay.io/prometheus-operator/prometheus-operator:v0.87.1"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - --kubelet-service=kube-system/prometheus-stack-kube-prom-kubelet
+            - --kubelet-endpoints=true
+            - --kubelet-endpointslice=false
+            - --localhost=127.0.0.1
+            - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.87.1
+            - --config-reloader-cpu-request=0
+            - --config-reloader-cpu-limit=0
+            - --config-reloader-memory-request=0
+            - --config-reloader-memory-limit=0
+            - --thanos-default-base-image=quay.io/thanos/thanos:v0.40.1
+            - --secret-field-selector=type!=kubernetes.io/dockercfg,type!=kubernetes.io/service-account-token,type!=helm.sh/release.v1
+            - --web.enable-tls=true
+            - --web.cert-file=/cert/cert
+            - --web.key-file=/cert/key
+            - --web.listen-address=:10250
+            - --web.tls-min-version=VersionTLS13
+          ports:
+            - containerPort: 10250
+              name: https
+          env:
+          - name: GOGC
+            value: "30"
+          resources:
+            limits:
+              cpu: 200m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: tls-secret
+              mountPath: /cert
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+      volumes:
+        - name: tls-secret
+          secret:
+            defaultMode: 420
+            secretName: prometheus-stack-kube-prom-admission
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: prometheus-stack-kube-prom-operator
+      automountServiceAccountToken: true
+      terminationGracePeriodSeconds: 30
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/admission-webhooks/mutatingWebhookConfiguration.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name:  prometheus-stack-kube-prom-admission
+  annotations:
+
+  labels:
+    app: kube-prometheus-stack-admission
+
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator-webhook
+webhooks:
+  - name: prometheusrulemutate.monitoring.coreos.com
+    failurePolicy: Ignore
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - "*"
+        resources:
+          - prometheusrules
+        operations:
+          - CREATE
+          - UPDATE
+    clientConfig:
+      service:
+        namespace: monitoring
+        name: prometheus-stack-kube-prom-operator
+        path: /admission-prometheusrules/mutate
+    timeoutSeconds: 10
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/admission-webhooks/validatingWebhookConfiguration.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name:  prometheus-stack-kube-prom-admission
+  annotations:
+
+  labels:
+    app: kube-prometheus-stack-admission
+
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator-webhook
+webhooks:
+  - name: prometheusrulevalidate.monitoring.coreos.com
+    failurePolicy: Ignore
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - "*"
+        resources:
+          - prometheusrules
+        operations:
+          - CREATE
+          - UPDATE
+    clientConfig:
+      service:
+        namespace: monitoring
+        name: prometheus-stack-kube-prom-operator
+        path: /admission-prometheusrules/validate
+    timeoutSeconds: 10
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+  - name: alertmanagerconfigsvalidate.monitoring.coreos.com
+    failurePolicy: Ignore
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - v1alpha1
+        resources:
+          - alertmanagerconfigs
+        operations:
+          - CREATE
+          - UPDATE
+    clientConfig:
+      service:
+        namespace: monitoring
+        name: prometheus-stack-kube-prom-operator
+        path: /admission-alertmanagerconfigs/validate
+    timeoutSeconds: 10
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/servicemonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-stack-kube-prom-operator
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app: kube-prometheus-stack-operator
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator
+spec:
+
+  endpoints:
+  - port: https
+    scheme: https
+    tlsConfig:
+      serverName: prometheus-stack-kube-prom-operator
+      ca:
+        secret:
+          name: prometheus-stack-kube-prom-admission
+          key: ca
+          optional: false
+    honorLabels: true
+  selector:
+    matchLabels:
+      app: kube-prometheus-stack-operator
+      release: "prometheus-stack"
+  namespaceSelector:
+    matchNames:
+      - "monitoring"
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/admission-webhooks/job-patch/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name:  prometheus-stack-kube-prom-admission
+  namespace: monitoring
+  annotations:
+  labels:
+    app: kube-prometheus-stack-admission
+
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator-webhook
+automountServiceAccountToken: true
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/admission-webhooks/job-patch/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name:  prometheus-stack-kube-prom-admission
+  annotations:
+  labels:
+    app: kube-prometheus-stack-admission
+
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator-webhook
+rules:
+  - apiGroups:
+      - admissionregistration.k8s.io
+    resources:
+      - validatingwebhookconfigurations
+      - mutatingwebhookconfigurations
+    verbs:
+      - get
+      - update
+      - patch
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/admission-webhooks/job-patch/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name:  prometheus-stack-kube-prom-admission
+  annotations:
+  labels:
+    app: kube-prometheus-stack-admission
+
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-stack-kube-prom-admission
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-stack-kube-prom-admission
+    namespace: monitoring
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/admission-webhooks/job-patch/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name:  prometheus-stack-kube-prom-admission
+  namespace: monitoring
+  annotations:
+  labels:
+    app: kube-prometheus-stack-admission
+
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator-webhook
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - create
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/admission-webhooks/job-patch/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name:  prometheus-stack-kube-prom-admission
+  namespace: monitoring
+  annotations:
+  labels:
+    app: kube-prometheus-stack-admission
+
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prometheus-stack-kube-prom-admission
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-stack-kube-prom-admission
+    namespace: monitoring
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/admission-webhooks/job-patch/job-createSecret.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name:  prometheus-stack-kube-prom-admission-create
+  namespace: monitoring
+  annotations:
+  labels:
+    app: kube-prometheus-stack-admission-create
+
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator-webhook
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    metadata:
+      name:  prometheus-stack-kube-prom-admission-create
+      labels:
+        app: kube-prometheus-stack-admission-create
+
+        app.kubernetes.io/instance: prometheus-stack
+        app.kubernetes.io/version: "80.4.2"
+        app.kubernetes.io/part-of: kube-prometheus-stack
+        release: "prometheus-stack"
+        app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+        app.kubernetes.io/component: prometheus-operator-webhook
+    spec:
+      containers:
+        - name: create
+          image: ghcr.io/jkroepke/kube-webhook-certgen:1.7.3
+          imagePullPolicy: IfNotPresent
+          args:
+            - create
+            - --host=prometheus-stack-kube-prom-operator,prometheus-stack-kube-prom-operator.monitoring.svc
+            - --namespace=monitoring
+            - --secret-name=prometheus-stack-kube-prom-admission
+          securityContext:
+
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            {}
+      restartPolicy: OnFailure
+      serviceAccountName: prometheus-stack-kube-prom-admission
+      securityContext:
+        runAsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 2000
+        seccompProfile:
+          type: RuntimeDefault
+---
+# Source: kube-prometheus-stack/templates/prometheus-operator/admission-webhooks/job-patch/job-patchWebhook.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name:  prometheus-stack-kube-prom-admission-patch
+  namespace: monitoring
+  annotations:
+  labels:
+    app: kube-prometheus-stack-admission-patch
+
+    app.kubernetes.io/instance: prometheus-stack
+    app.kubernetes.io/version: "80.4.2"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    release: "prometheus-stack"
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/component: prometheus-operator-webhook
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    metadata:
+      name:  prometheus-stack-kube-prom-admission-patch
+      labels:
+        app: kube-prometheus-stack-admission-patch
+
+        app.kubernetes.io/instance: prometheus-stack
+        app.kubernetes.io/version: "80.4.2"
+        app.kubernetes.io/part-of: kube-prometheus-stack
+        release: "prometheus-stack"
+        app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+        app.kubernetes.io/component: prometheus-operator-webhook
+    spec:
+      containers:
+        - name: patch
+          image: ghcr.io/jkroepke/kube-webhook-certgen:1.7.3
+          imagePullPolicy: IfNotPresent
+          args:
+            - patch
+            - --webhook-name=prometheus-stack-kube-prom-admission
+            - --namespace=monitoring
+            - --secret-name=prometheus-stack-kube-prom-admission
+            - --patch-failure-policy=
+          securityContext:
+
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            {}
+      restartPolicy: OnFailure
+      serviceAccountName: prometheus-stack-kube-prom-admission
+      securityContext:
+        runAsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 2000
+        seccompProfile:
+          type: RuntimeDefault

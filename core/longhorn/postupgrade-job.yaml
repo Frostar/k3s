@@ -1,0 +1,38 @@
+---
+# Source: longhorn/templates/postupgrade-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+  name: longhorn-post-upgrade
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/instance: longhorn
+    app.kubernetes.io/version: v1.10.1
+spec:
+  activeDeadlineSeconds: 900
+  backoffLimit: 1
+  template:
+    metadata:
+      name: longhorn-post-upgrade
+      labels:
+        app.kubernetes.io/name: longhorn
+        app.kubernetes.io/instance: longhorn
+        app.kubernetes.io/version: v1.10.1
+    spec:
+      containers:
+      - name: longhorn-post-upgrade
+        image: longhornio/longhorn-manager:v1.10.1
+        imagePullPolicy: IfNotPresent
+        command:
+        - longhorn-manager
+        - post-upgrade
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      restartPolicy: OnFailure
+      priorityClassName: "longhorn-critical"
+      serviceAccountName: longhorn-service-account

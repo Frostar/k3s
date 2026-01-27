@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd,authentik-authentik@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    # If argocd-server runs with --insecure (HTTP), use h2c for gRPC support:
+    traefik.ingress.kubernetes.io/service.serversscheme: h2c
+    # If you keep argocd-server HTTPS, comment the line above and uncomment below:
+    # traefik.ingress.kubernetes.io/service.serversscheme: https
+    # traefik.ingress.kubernetes.io/service.serverstransport: kube-system-argocd-https-insecure@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - argocd.j-frost.dk
+    secretName: argocd-tls
+  rules:
+  - host: argocd.j-frost.dk
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 80

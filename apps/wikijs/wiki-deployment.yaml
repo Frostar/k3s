@@ -1,0 +1,85 @@
+---
+# Source: wiki/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wiki
+  namespace: wikijs
+  labels:
+    app.kubernetes.io/name: wiki
+    app.kubernetes.io/instance: wiki
+    app.kubernetes.io/version: "latest"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wiki
+      app.kubernetes.io/instance: wiki
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: wiki
+        app.kubernetes.io/instance: wiki
+      annotations:
+        {}
+    spec:
+      serviceAccountName: wiki
+      securityContext:
+        {}
+      containers:
+        - name: wiki
+          securityContext:
+            {}
+          image: "requarks/wiki:latest"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_TYPE
+              value: postgres
+            - name: DB_HOST
+              value: "postgresql.wikijs.svc.cluster.local"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: wiki
+            - name: DB_USER
+              value: wikijs
+            - name: DB_SSL
+              value: "false"
+            - name: DB_SSL_CA
+              value: ""
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: wikijs-secrets
+                  key: "POSTGRES_PASSWORD"
+            - name: HA_ACTIVE
+              value: "false"
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              memory: 512Mi

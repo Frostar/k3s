@@ -1,0 +1,18 @@
+---
+# Source: traefik/templates/rbac/clusterrolebinding.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: traefik-kube-system
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik-kube-system
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: traefik-kube-system
+subjects:
+  - kind: ServiceAccount
+    name: traefik
+    namespace: kube-system

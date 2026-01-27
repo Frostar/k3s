@@ -1,0 +1,158 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgresql
+  namespace: authentik
+spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  serviceName: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+        - args:
+            - -c
+            - shared_buffers=256MB
+            - -c
+            - effective_cache_size=1GB
+            - -c
+            - maintenance_work_mem=128MB
+            - -c
+            - work_mem=4MB
+            - -c
+            - wal_buffers=16MB
+            - -c
+            - min_wal_size=1GB
+            - -c
+            - max_wal_size=4GB
+            - -c
+            - checkpoint_completion_target=0.9
+            - -c
+            - default_statistics_target=100
+            - -c
+            - random_page_cost=1.1
+            - -c
+            - effective_io_concurrency=200
+            - -c
+            - max_connections=100
+            - -c
+            - autovacuum=on
+            - -c
+            - autovacuum_naptime=30s
+            - -c
+            - autovacuum_vacuum_threshold=50
+            - -c
+            - autovacuum_analyze_threshold=50
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: authentik-secrets
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USER
+                  name: authentik-secrets
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_DB
+                  name: authentik-secrets
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          image: postgres:16-alpine
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -d "$POSTGRES_DB" -U "$POSTGRES_USER"
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+          name: postgresql
+          ports:
+            - containerPort: 5432
+              name: postgresql
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -d "$POSTGRES_DB" -U "$POSTGRES_USER"
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: 200m
+              memory: 512Mi
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresql-data
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - |
+              chown -R 999:999 /var/lib/postgresql/data || true
+              chmod -R 700 /var/lib/postgresql/data || true
+              if [ -d /var/lib/postgresql/data/pgdata ]; then
+                chown -R 999:999 /var/lib/postgresql/data/pgdata || true
+                chmod -R 700 /var/lib/postgresql/data/pgdata || true
+              fi
+          image: busybox:latest
+          name: fix-permissions
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresql-data
+      securityContext:
+        fsGroup: 999
+        runAsGroup: 999
+        runAsUser: 999
+      volumes:
+        - name: postgresql-data
+          persistentVolumeClaim:
+            claimName: postgresql-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  namespace: authentik
+spec:
+  type: ClusterIP
+  selector:
+    app: postgresql
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-data
+  namespace: authentik
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 10Gi

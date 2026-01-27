@@ -1,0 +1,8 @@
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: argocd-https-insecure
+  namespace: kube-system
+spec:
+  insecureSkipVerify: true
+

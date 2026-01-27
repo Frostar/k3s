@@ -1,0 +1,25 @@
+---
+# Source: wiki/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wiki
+  namespace: wikijs
+  labels:
+    app.kubernetes.io/name: wiki
+    app.kubernetes.io/instance: wiki
+    app.kubernetes.io/version: "latest"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 443
+      targetPort: http
+      protocol: TCP
+      name: https
+  selector:
+    app.kubernetes.io/name: wiki
+    app.kubernetes.io/instance: wiki

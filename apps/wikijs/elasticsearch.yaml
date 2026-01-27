@@ -46,7 +46,7 @@ spec:
         - name: xpack.security.enrollment.enabled
           value: "false"
         - name: bootstrap.memory_lock
-          value: "true"
+          value: "false"
         volumeMounts:
         - name: elasticsearch-data
           mountPath: /usr/share/elasticsearch/data
@@ -61,16 +61,18 @@ spec:
           httpGet:
             path: /_cluster/health
             port: 9200
-          initialDelaySeconds: 60
+          initialDelaySeconds: 180
           periodSeconds: 30
-          timeoutSeconds: 5
+          timeoutSeconds: 10
+          failureThreshold: 5
         readinessProbe:
           httpGet:
             path: /_cluster/health
             port: 9200
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 3
+          initialDelaySeconds: 120
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 10
       securityContext:
         fsGroup: 1000
         runAsUser: 1000

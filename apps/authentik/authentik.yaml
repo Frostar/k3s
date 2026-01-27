@@ -1,0 +1,499 @@
+---
+# Source: authentik/charts/serviceAccount/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: authentik
+  namespace: "authentik"
+  labels:
+    app.kubernetes.io/name: "serviceAccount"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2.1.0"
+---
+# Source: authentik/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: authentik
+  namespace: "authentik"
+  labels:
+    app.kubernetes.io/name: "authentik"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2025.10.3"
+data:
+  AUTHENTIK_EMAIL__PORT: "NTg3"
+  AUTHENTIK_EMAIL__TIMEOUT: "MzA="
+  AUTHENTIK_EMAIL__USE_SSL: "ZmFsc2U="
+  AUTHENTIK_EMAIL__USE_TLS: "ZmFsc2U="
+  AUTHENTIK_ENABLED: "dHJ1ZQ=="
+  AUTHENTIK_ERROR_REPORTING__ENABLED: "ZmFsc2U="
+  AUTHENTIK_ERROR_REPORTING__ENVIRONMENT: "azhz"
+  AUTHENTIK_ERROR_REPORTING__SEND_PII: "ZmFsc2U="
+  AUTHENTIK_EVENTS__CONTEXT_PROCESSORS__ASN: "L2dlb2lwL0dlb0xpdGUyLUFTTi5tbWRi"
+  AUTHENTIK_EVENTS__CONTEXT_PROCESSORS__GEOIP: "L2dlb2lwL0dlb0xpdGUyLUNpdHkubW1kYg=="
+  AUTHENTIK_HOST: "YXV0aC5qLWZyb3N0LmRr"
+  AUTHENTIK_LOG_LEVEL: "aW5mbw=="
+  AUTHENTIK_OUTPOSTS__CONTAINER_IMAGE_BASE: "Z2hjci5pby9nb2F1dGhlbnRpay8lKHR5cGUpczolKHZlcnNpb24pcw=="
+  AUTHENTIK_POSTGRESQL__HOST: "YXV0aGVudGlrLXBvc3RncmVzcWw="
+  AUTHENTIK_POSTGRESQL__NAME: "YXV0aGVudGlr"
+  AUTHENTIK_POSTGRESQL__PORT: "NTQzMg=="
+  AUTHENTIK_POSTGRESQL__USER: "YXV0aGVudGlr"
+  AUTHENTIK_WEB__PATH: "Lw=="
+---
+# Source: authentik/charts/serviceAccount/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: "authentik-authentik"
+  labels:
+    app.kubernetes.io/name: "serviceAccount"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2.1.0"
+rules:
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - list
+---
+# Source: authentik/charts/serviceAccount/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "authentik-authentik"
+  labels:
+    app.kubernetes.io/name: "serviceAccount"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2.1.0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "authentik-authentik"
+subjects:
+  - kind: ServiceAccount
+    name: authentik
+    namespace: "authentik"
+---
+# Source: authentik/charts/serviceAccount/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: authentik
+  namespace: "authentik"
+  labels:
+    app.kubernetes.io/name: "serviceAccount"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2.1.0"
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - services
+      - configmaps
+    verbs:
+      - get
+      - create
+      - delete
+      - list
+      - patch
+  - apiGroups:
+      - extensions
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - get
+      - create
+      - delete
+      - list
+      - patch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - create
+      - delete
+      - list
+      - patch
+  - apiGroups:
+      - traefik.containo.us
+      - traefik.io
+    resources:
+      - middlewares
+    verbs:
+      - get
+      - create
+      - delete
+      - list
+      - patch
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - httproutes
+    verbs:
+      - get
+      - create
+      - delete
+      - list
+      - patch
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - servicemonitors
+    verbs:
+      - get
+      - create
+      - delete
+      - list
+      - patch
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - list
+---
+# Source: authentik/charts/serviceAccount/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: authentik
+  namespace: "authentik"
+  labels:
+    app.kubernetes.io/name: "serviceAccount"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2.1.0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: authentik
+subjects:
+  - kind: ServiceAccount
+    name: authentik
+    namespace: "authentik"
+---
+# Source: authentik/templates/server/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentik-server
+  namespace: "authentik"
+  labels:
+    app.kubernetes.io/name: "authentik"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/component: "server"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2025.10.3"
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 9000
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 9443
+  selector:
+    app.kubernetes.io/name: "authentik"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/component: "server"
+---
+# Source: authentik/templates/server/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-server
+  namespace: "authentik"
+  labels:
+    app.kubernetes.io/name: "authentik"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/component: "server"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2025.10.3"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "authentik"
+      app.kubernetes.io/instance: "authentik"
+      app.kubernetes.io/component: "server"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "authentik"
+        app.kubernetes.io/instance: "authentik"
+        app.kubernetes.io/component: "server"
+        app.kubernetes.io/part-of: "authentik"
+        app.kubernetes.io/version: "2025.10.3"
+      annotations:
+        checksum/secret: 13e575667277dd36a29e9f03e4d0de7bab495be43f7d39fafe002cad37599393
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: server
+          image: ghcr.io/goauthentik/server:2025.10.3
+          imagePullPolicy: IfNotPresent
+          args:
+            - server
+          env:
+            - name: AUTHENTIK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: AUTHENTIK_SECRET_KEY
+                  name: authentik-secrets
+            - name: AUTHENTIK_POSTGRESQL__HOST
+              value: postgresql.authentik.svc.cluster.local
+            - name: AUTHENTIK_POSTGRESQL__PORT
+              value: "5432"
+            - name: AUTHENTIK_POSTGRESQL__USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USER
+                  name: authentik-secrets
+            - name: AUTHENTIK_POSTGRESQL__NAME
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_DB
+                  name: authentik-secrets
+            - name: AUTHENTIK_POSTGRESQL__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: authentik-secrets
+            - name: AUTHENTIK_LISTEN__HTTP
+              value: "0.0.0.0:9000"
+            - name: AUTHENTIK_LISTEN__HTTPS
+              value: "0.0.0.0:9443"
+            - name: AUTHENTIK_LISTEN__METRICS
+              value: "0.0.0.0:9300"
+          envFrom:
+            - secretRef:
+                name: authentik
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+            - name: https
+              containerPort: 9443
+              protocol: TCP
+            - name: metrics
+              containerPort: 9300
+              protocol: TCP
+          livenessProbe:
+
+            failureThreshold: 3
+            httpGet:
+              path: '/-/health/live/'
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+          readinessProbe:
+
+            failureThreshold: 3
+            httpGet:
+              path: '/-/health/ready/'
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+          startupProbe:
+
+            failureThreshold: 60
+            httpGet:
+              path: '/-/health/live/'
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+          resources:
+            {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: "authentik"
+                    app.kubernetes.io/instance: "authentik"
+                    app.kubernetes.io/component: "server"
+                topologyKey: kubernetes.io/hostname
+      enableServiceLinks: true
+---
+# Source: authentik/templates/worker/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-worker
+  namespace: "authentik"
+  labels:
+    app.kubernetes.io/name: "authentik"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/component: "worker"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2025.10.3"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "authentik"
+      app.kubernetes.io/instance: "authentik"
+      app.kubernetes.io/component: "worker"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "authentik"
+        app.kubernetes.io/instance: "authentik"
+        app.kubernetes.io/component: "worker"
+        app.kubernetes.io/part-of: "authentik"
+        app.kubernetes.io/version: "2025.10.3"
+      annotations:
+        checksum/secret: 13e575667277dd36a29e9f03e4d0de7bab495be43f7d39fafe002cad37599393
+    spec:
+      serviceAccountName: authentik
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: worker
+          image: ghcr.io/goauthentik/server:2025.10.3
+          imagePullPolicy: IfNotPresent
+          args:
+            - worker
+          env:
+            - name: AUTHENTIK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: AUTHENTIK_SECRET_KEY
+                  name: authentik-secrets
+            - name: AUTHENTIK_POSTGRESQL__HOST
+              value: postgresql.authentik.svc.cluster.local
+            - name: AUTHENTIK_POSTGRESQL__PORT
+              value: "5432"
+            - name: AUTHENTIK_POSTGRESQL__USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USER
+                  name: authentik-secrets
+            - name: AUTHENTIK_POSTGRESQL__NAME
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_DB
+                  name: authentik-secrets
+            - name: AUTHENTIK_POSTGRESQL__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: authentik-secrets
+            - name: AUTHENTIK_LISTEN__HTTP
+              value: "0.0.0.0:9000"
+            - name: AUTHENTIK_LISTEN__METRICS
+              value: "0.0.0.0:9300"
+          envFrom:
+            - secretRef:
+                name: authentik
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+            - name: metrics
+              containerPort: 9300
+              protocol: TCP
+          livenessProbe:
+
+            exec:
+              command:
+              - ak
+              - healthcheck
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+          readinessProbe:
+
+            exec:
+              command:
+              - ak
+              - healthcheck
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+          startupProbe:
+
+            exec:
+              command:
+              - ak
+              - healthcheck
+            failureThreshold: 60
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+          resources:
+            {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: "authentik"
+                    app.kubernetes.io/instance: "authentik"
+                    app.kubernetes.io/component: "worker"
+                topologyKey: kubernetes.io/hostname
+      enableServiceLinks: true
+---
+# Source: authentik/templates/server/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: authentik-server
+  namespace: "authentik"
+  labels:
+    app.kubernetes.io/name: "authentik"
+    app.kubernetes.io/instance: "authentik"
+    app.kubernetes.io/component: "server"
+    app.kubernetes.io/part-of: "authentik"
+    app.kubernetes.io/version: "2025.10.3"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: "auth.j-frost.dk"
+      http:
+        paths:
+          - path: '/'
+            pathType: Prefix
+            backend:
+              service:
+                name: authentik-server
+                port:
+                  number: 80
+  tls:
+    - hosts:
+      - auth.j-frost.dk
+      secretName: authentik-tls
