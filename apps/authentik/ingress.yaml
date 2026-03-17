@@ -1,0 +1,70 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/instance: authentik
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: authentik
+    app.kubernetes.io/part-of: authentik
+    app.kubernetes.io/version: 2025.10.3
+    helm.sh/chart: authentik-2025.10.3
+  name: authentik-server
+  namespace: authentik
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: auth.j-frost.dk
+    http:
+      paths:
+      - backend:
+          service:
+            name: authentik-server
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - auth.j-frost.dk
+    secretName: authentik-tls
+
+---
+# Managed by goauthentik.io (embedded outpost)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/affinity: "true"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  labels:
+    app.kubernetes.io/instance: authentik-embedded-outpost
+    app.kubernetes.io/managed-by: goauthentik.io
+    app.kubernetes.io/name: authentik-proxy
+    app.kubernetes.io/version: 2025.10.3
+    goauthentik.io/outpost-name: authentik-embedded-outpost
+    goauthentik.io/outpost-type: proxy
+    goauthentik.io/outpost-uuid: 6e9e01e0cebf4976b18ee086cc667cf2
+  name: ak-outpost-authentik-embedded-outpost
+  namespace: authentik
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: auth.j-frost.dk
+    http:
+      paths:
+      - backend:
+          service:
+            name: ak-outpost-authentik-embedded-outpost
+            port:
+              name: http
+        path: /outpost.goauthentik.io
+        pathType: Prefix
+  tls:
+  - hosts:
+    - auth.j-frost.dk
+    secretName: authentik-outpost-tls

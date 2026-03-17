@@ -8,7 +8,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: 10Gi
   storageClassName: longhorn
 
 ---
@@ -35,6 +35,8 @@ spec:
         - containerPort: 5432
           name: postgresql
         env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         - name: POSTGRES_DB
           value: wiki
         - name: POSTGRES_USER

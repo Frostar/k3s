@@ -61,16 +61,17 @@ spec:
           httpGet:
             path: /_cluster/health
             port: 9200
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 30
-          timeoutSeconds: 5
+          timeoutSeconds: 10
+          failureThreshold: 5
         readinessProbe:
           httpGet:
             path: /_cluster/health
             port: 9200
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 3
+          initialDelaySeconds: 90
+          periodSeconds: 15
+          timeoutSeconds: 5
       securityContext:
         fsGroup: 1000
         runAsUser: 1000

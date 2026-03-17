@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/instance: authentik
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: authentik
+    app.kubernetes.io/part-of: authentik
+    app.kubernetes.io/version: 2025.10.3
+    helm.sh/chart: authentik-2025.10.3
+  name: authentik-server
+  namespace: authentik
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 9000
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 9443
+  selector:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/instance: authentik
+    app.kubernetes.io/name: authentik
+  type: ClusterIP
+
+---
+# Managed by goauthentik.io (embedded outpost)
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: authentik-embedded-outpost
+    app.kubernetes.io/managed-by: goauthentik.io
+    app.kubernetes.io/name: authentik-proxy
+    app.kubernetes.io/version: 2025.10.3
+    goauthentik.io/outpost-name: authentik-embedded-outpost
+    goauthentik.io/outpost-type: proxy
+    goauthentik.io/outpost-uuid: 6e9e01e0cebf4976b18ee086cc667cf2
+  name: ak-outpost-authentik-embedded-outpost
+  namespace: authentik
+spec:
+  ports:
+  - name: http
+    port: 9000
+    protocol: TCP
+    targetPort: 9000
+  - name: http-metrics
+    port: 9300
+    protocol: TCP
+    targetPort: 9300
+  - name: https
+    port: 9443
+    protocol: TCP
+    targetPort: 9443
+  selector:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: authentik
+  type: ClusterIP

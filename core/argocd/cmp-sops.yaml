@@ -1,0 +1,80 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmp-sops-plugin
+  namespace: argocd
+data:
+  plugin.yaml: |
+    apiVersion: argoproj.io/v1alpha1
+    kind: ConfigManagementPlugin
+    metadata:
+      name: argocd-cmp-sops
+    spec:
+      version: v1.0
+      discover:
+        find:
+          glob: "**/*.enc.yaml"
+      generate:
+        command:
+          - sh
+          - -c
+          - |
+            find . -name '*.enc.yaml' | while read f; do
+              sops -d "$f"
+              echo "---"
+            done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-repo-server
+  namespace: argocd
+spec:
+  template:
+    spec:
+      volumes:
+        - name: argocd-age-key
+          secret:
+            secretName: argocd-age-key
+        - name: custom-tools
+          emptyDir: {}
+        - name: cmp-sops-plugin
+          configMap:
+            name: argocd-cmp-sops-plugin
+      initContainers:
+        - name: download-sops
+          image: alpine:3
+          command: [sh, -c]
+          args:
+            - wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/v3.12.1/sops-v3.12.1.linux.arm64
+              && chmod +x /custom-tools/sops
+          volumeMounts:
+            - name: custom-tools
+              mountPath: /custom-tools
+      containers:
+        - name: argocd-cmp-sops
+          image: quay.io/argoproj/argocd:v3.2.3
+          command: [/var/run/argocd/argocd-cmp-server]
+          env:
+            - name: SOPS_AGE_KEY_FILE
+              value: /age-key/keys.txt
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+          volumeMounts:
+            - name: var-files
+              mountPath: /var/run/argocd
+            - name: plugins
+              mountPath: /home/argocd/cmp-server/plugins
+            - name: tmp
+              mountPath: /tmp
+            - name: argocd-age-key
+              mountPath: /age-key
+              readOnly: true
+            - name: custom-tools
+              mountPath: /usr/local/bin/sops
+              subPath: sops
+            - name: cmp-sops-plugin
+              mountPath: /home/argocd/cmp-server/config/plugin.yaml
+              subPath: plugin.yaml
