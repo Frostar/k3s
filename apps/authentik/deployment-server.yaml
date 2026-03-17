@@ -80,7 +80,7 @@ spec:
         envFrom:
         - secretRef:
             name: authentik
-        image: ghcr.io/goauthentik/server:2025.10.3
+        image: ghcr.io/goauthentik/server:2025.12.4
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3

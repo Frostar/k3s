@@ -54,7 +54,7 @@ spec:
               mountPath: /custom-tools
       containers:
         - name: argocd-cmp-sops
-          image: quay.io/argoproj/argocd:v3.2.3
+          image: quay.io/argoproj/argocd:v3.3.4
           command: [/var/run/argocd/argocd-cmp-server]
           env:
             - name: SOPS_AGE_KEY_FILE
