@@ -34,7 +34,7 @@ spec:
           type: RuntimeDefault
       initContainers:
       - name: download-images
-        image: alpine:latest
+        image: alpine:3.21
         command:
         - sh
         - -c

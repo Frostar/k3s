@@ -128,7 +128,7 @@ spec:
             chown -R 999:999 /var/lib/postgresql/data/pgdata || true
             chmod -R 700 /var/lib/postgresql/data/pgdata || true
           fi
-        image: busybox:latest
+        image: busybox:1.37.0
         name: fix-permissions
         securityContext:
           runAsUser: 0
