@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: amidumb
+  namespace: argocd
+spec:
+  project: homelab
+  source:
+    repoURL: https://github.com/Frostar/k3s
+    targetRevision: HEAD
+    path: apps/amidumb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: public-sites
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
