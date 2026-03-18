@@ -21,7 +21,7 @@ spec:
             fsGroup: 1000
           containers:
           - name: postgres-backup
-            image: ghcr.io/frostar/postgre-backup:latest
+            image: ghcr.io/frostar/postgre-backup:2.0.0
             env:
             - name: PGHOST
               value: postgresql.authentik.svc.cluster.local
