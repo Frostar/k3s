@@ -1,6 +1,6 @@
 # Wiki Ingress
 # Service running in wikijs namespace
-# Protected with Authentik middleware
+# Auth handled by Wiki.js OIDC (Authentik provider)
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -9,7 +9,7 @@ metadata:
   namespace: wikijs
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd,authentik-authentik@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
 spec:
   ingressClassName: traefik

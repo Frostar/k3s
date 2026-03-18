@@ -83,7 +83,7 @@ spec:
               name: authentik-secrets
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
-        image: postgres:16-alpine
+        image: postgres:18-alpine
         livenessProbe:
           exec:
             command:
