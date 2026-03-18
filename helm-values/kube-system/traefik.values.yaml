@@ -7,6 +7,9 @@ global:
 image:
   repository: rancher/mirrored-library-traefik
   tag: 3.5.1
+api:
+  insecure: true
+  dashboard: true
 priorityClassName: system-cluster-critical
 providers:
   kubernetesIngress:
