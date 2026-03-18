@@ -56,6 +56,24 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
+      initContainers:
+      - name: fix-permissions
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          chown -R 70:70 /var/lib/postgresql/data || true
+          chmod -R 700 /var/lib/postgresql/data || true
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: postgresql-data
+          mountPath: /var/lib/postgresql/data
+      securityContext:
+        fsGroup: 70
+        runAsGroup: 70
+        runAsUser: 70
       volumes:
       - name: postgresql-data
         persistentVolumeClaim:
