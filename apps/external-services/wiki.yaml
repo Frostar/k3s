@@ -1,7 +1,37 @@
 # Wiki Ingress
 # Service running in wikijs namespace
-# Auth handled by Wiki.js OIDC (Authentik provider)
+# ForwardAuth gate + OIDC callback bypass for Wiki.js login
 
+# OIDC callback path — must bypass ForwardAuth to complete the OAuth2 flow
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wiki-oidc-callback
+  namespace: wikijs
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - wiki.j-frost.dk
+    secretName: wiki-tls
+  rules:
+  - host: wiki.j-frost.dk
+    http:
+      paths:
+      - path: /login
+        pathType: Prefix
+        backend:
+          service:
+            name: wiki
+            port:
+              number: 80
+
+---
+# Main ingress — protected by Authentik ForwardAuth
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,7 +39,7 @@ metadata:
   namespace: wikijs
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd,authentik-authentik@kubernetescrd
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
 spec:
   ingressClassName: traefik
