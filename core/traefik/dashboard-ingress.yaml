@@ -1,5 +1,20 @@
 # Traefik dashboard — protected by Authentik ForwardAuth
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-dashboard
+  namespace: kube-system
+spec:
+  selector:
+    app.kubernetes.io/name: traefik
+  ports:
+  - name: dashboard
+    port: 8080
+    targetPort: traefik
+  type: ClusterIP
+
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -7,7 +22,6 @@ metadata:
   namespace: kube-system
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.service: api@internal
     traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd,authentik-authentik@kubernetescrd
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
 spec:
@@ -24,6 +38,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: traefik
+            name: traefik-dashboard
             port:
-              number: 9000  # Traefik dashboard port
+              number: 8080
