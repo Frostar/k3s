@@ -28,6 +28,11 @@
       "description": "Pin digests for all images",
       "matchManagers": ["kubernetes"],
       "pinDigests": false
+    },
+    {
+      "description": "Wiki.js does not support Elasticsearch 9, stay on 8.x",
+      "matchPackageNames": ["docker.elastic.co/elasticsearch/elasticsearch"],
+      "allowedVersions": "<9"
     }
   ],
   "dependencyDashboard": true
