@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: argocd.j-frost.dk
+    http:
+      paths:
+      - backend:
+          service:
+            name: argocd-server
+            port:
+              number: 443
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - argocd.j-frost.dk
+    secretName: argocd-tls
