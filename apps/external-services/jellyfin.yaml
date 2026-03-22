@@ -1,0 +1,60 @@
+# Jellyfin Service and Ingress
+# External service running at 192.168.10.249:30013 (umbreon)
+
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: jellyfin-svc
+  namespace: default
+  labels:
+    kubernetes.io/service-name: jellyfin-svc
+addressType: IPv4
+endpoints:
+- addresses:
+  - "192.168.10.249"
+  conditions:
+    ready: true
+ports:
+- port: 30013
+  protocol: TCP
+  name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-svc
+  namespace: default
+spec:
+  type: ClusterIP
+  ports:
+  - port: 30013
+    targetPort: 30013
+    protocol: TCP
+    name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jellyfin
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - jellyfin.lunding.xyz
+    secretName: jellyfin-lunding-tls
+  rules:
+  - host: jellyfin.lunding.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jellyfin-svc
+            port:
+              number: 30013
