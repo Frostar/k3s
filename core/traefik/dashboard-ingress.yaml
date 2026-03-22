@@ -30,8 +30,21 @@ spec:
   - hosts:
     - traefik.j-frost.dk
     secretName: traefik-dashboard-tls
+  - hosts:
+    - traefik.lunding.xyz
+    secretName: traefik-dashboard-lunding-tls
   rules:
   - host: traefik.j-frost.dk
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: traefik-dashboard
+            port:
+              number: 8080
+  - host: traefik.lunding.xyz
     http:
       paths:
       - path: /
