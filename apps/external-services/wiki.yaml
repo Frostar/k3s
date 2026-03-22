@@ -18,8 +18,21 @@ spec:
   - hosts:
     - wiki.j-frost.dk
     secretName: wiki-tls
+  - hosts:
+    - wiki.lunding.xyz
+    secretName: wiki-lunding-tls
   rules:
   - host: wiki.j-frost.dk
+    http:
+      paths:
+      - path: /login
+        pathType: Prefix
+        backend:
+          service:
+            name: wiki
+            port:
+              number: 80
+  - host: wiki.lunding.xyz
     http:
       paths:
       - path: /login
@@ -47,8 +60,21 @@ spec:
   - hosts:
     - wiki.j-frost.dk
     secretName: wiki-tls
+  - hosts:
+    - wiki.lunding.xyz
+    secretName: wiki-lunding-tls
   rules:
   - host: wiki.j-frost.dk
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wiki
+            port:
+              number: 80
+  - host: wiki.lunding.xyz
     http:
       paths:
       - path: /
