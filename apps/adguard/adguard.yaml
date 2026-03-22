@@ -80,14 +80,14 @@ spec:
         persistentVolumeClaim:
           claimName: adguard-work
 ---
-# Fixed IP LoadBalancer for DNS — point devices and UniFi DHCP at 192.168.10.121
+# Fixed IP LoadBalancer for DNS — point devices and UniFi DHCP at 192.168.10.131
 apiVersion: v1
 kind: Service
 metadata:
   name: adguard-dns
   namespace: adguard
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.10.121
+    metallb.universe.tf/loadBalancerIPs: 192.168.10.131
 spec:
   type: LoadBalancer
   selector:
