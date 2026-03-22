@@ -90,6 +90,7 @@ metadata:
     metallb.universe.tf/loadBalancerIPs: 192.168.10.131
 spec:
   type: LoadBalancer
+  externalTrafficPolicy: Local
   selector:
     app: adguard
   ports:
