@@ -21,7 +21,20 @@ spec:
               number: 80
         path: /
         pathType: Prefix
+  - host: argocd.lunding.xyz
+    http:
+      paths:
+      - backend:
+          service:
+            name: argocd-server
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
   tls:
   - hosts:
     - argocd.j-frost.dk
     secretName: argocd-tls
+  - hosts:
+    - argocd.lunding.xyz
+    secretName: argocd-lunding-tls
