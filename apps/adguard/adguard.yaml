@@ -101,6 +101,10 @@ spec:
     targetPort: 53
     protocol: TCP
     name: dns-tcp
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
   - port: 3000
     targetPort: 3000
     protocol: TCP
