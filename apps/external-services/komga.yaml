@@ -1,0 +1,60 @@
+# Komga Service and Ingress
+# External service running at 192.168.10.249:30048 (umbreon)
+
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: komga-svc
+  namespace: default
+  labels:
+    kubernetes.io/service-name: komga-svc
+addressType: IPv4
+endpoints:
+- addresses:
+  - "192.168.10.249"
+  conditions:
+    ready: true
+ports:
+- port: 30048
+  protocol: TCP
+  name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: komga-svc
+  namespace: default
+spec:
+  type: ClusterIP
+  ports:
+  - port: 30048
+    targetPort: 30048
+    protocol: TCP
+    name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: komga
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - komga.lunding.xyz
+    secretName: komga-lunding-tls
+  rules:
+  - host: komga.lunding.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: komga-svc
+            port:
+              number: 30048
