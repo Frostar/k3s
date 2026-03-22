@@ -48,6 +48,18 @@ This cluster uses MetalLB for bare-metal LoadBalancer IPs. Two pools are defined
 
 When creating a LoadBalancer service, do not hard-code an IP unless necessary. If a specific IP is required, annotate with `metallb.universe.tf/loadBalancerIPs` and pick from the default pool range.
 
+Reserved IPs (do not reuse):
+
+| IP | Service |
+|---|---|
+| `192.168.10.120` | Traefik |
+| `192.168.10.121` | Wiki.js |
+| `192.168.10.122` | Longhorn |
+| `192.168.10.123` | LittleLink |
+| `192.168.10.124` | amidumb |
+| `192.168.10.130` | ArgoCD |
+| `192.168.10.131` | AdGuard Home (DNS — do not change) |
+
 ## Security & Configuration Tips
 - SOPS keys: set `SOPS_AGE_KEY_FILE` locally; keep private key in Bitwarden and offline backup.
 - Do not use `helm upgrade` ad-hoc on the cluster. If a Helm chart must be used, pin the chart version in the ArgoCD Application and keep values in `helm-values/`.
