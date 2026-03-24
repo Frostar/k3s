@@ -7,9 +7,9 @@
   "schedule": ["before 6am on monday"],
   "labels": ["dependencies"],
   "kubernetes": {
-    "fileMatch": [
-      "apps/.+\\.yaml$",
-      "core/.+\\.yaml$"
+    "managerFilePatterns": [
+      "/apps/.+\.yaml$/",
+      "/core/.+\.yaml$/"
     ]
   },
   "packageRules": [
