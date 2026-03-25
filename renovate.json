@@ -8,8 +8,8 @@
   "labels": ["dependencies"],
   "kubernetes": {
     "managerFilePatterns": [
-      "/apps/.+\.yaml$/",
-      "/core/.+\.yaml$/"
+      "/apps/.+\\.yaml$/",
+      "/core/.+\\.yaml$/"
     ]
   },
   "packageRules": [
