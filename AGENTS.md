@@ -20,6 +20,22 @@ This repo manages a personal k3s cluster with GitOps. Keep everything reproducib
 - Directories mirror namespaces/apps; keep values files named `<release>.values.yaml`.
 - No plaintext secrets. Use SOPS; encrypt fields under `data/stringData` or matching `(password|token|secret)`.
 
+## Security
+
+A Claude Code pre-push hook (`.claude/hooks/pre-push-security-check.sh`) runs automatically before every `git push`. It will **block the push** if it finds:
+
+- Cleartext private keys or credentials
+- Kubernetes `Secret` manifests with unencrypted `data`/`stringData` (must be SOPS-encrypted)
+- Common token patterns (GitHub, AWS, Slack)
+- Kubernetes pod specs with `privileged: true`, `runAsUser: 0`, `hostNetwork: true`, etc.
+
+To bypass in an emergency: `SKIP_SECURITY_CHECK=1 git push` is **not supported** — fix the issue instead.
+
+Recommended tools to add for stronger scanning (not yet installed):
+- **gitleaks** — entropy-based secret scanning across full git history
+- **trivy** — Kubernetes manifest misconfiguration scanning (NSA/CIS benchmarks)
+- **kubescape** — NSA/MITRE ATT&CK framework checks for k8s manifests
+
 ## Testing Guidelines
 - Dry-run: `kubectl apply --server-dry-run=client -f <file>`.
 - Lint values (optional): `helm template --values <file> <chart> --namespace <ns>`.
