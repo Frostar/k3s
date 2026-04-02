@@ -102,6 +102,7 @@ prometheus:
         cpu: 250m
         memory: 512Mi
     retention: 15d
+    retentionSize: 36GB
     ruleSelectorNilUsesHelmValues: false
     serviceMonitorSelectorNilUsesHelmValues: false
     storageSpec:
@@ -111,7 +112,7 @@ prometheus:
           - ReadWriteOnce
           resources:
             requests:
-              storage: 20Gi
+              storage: 40Gi
           storageClassName: longhorn
 prometheus-node-exporter:
   extraArgs:

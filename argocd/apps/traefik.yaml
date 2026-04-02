@@ -12,4 +12,17 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
-  syncPolicy: {}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+  ignoreDifferences:
+    # k3s injects this annotation on services automatically
+    - group: ""
+      kind: Service
+      name: traefik
+      namespace: kube-system
+      jsonPointers:
+        - /metadata/annotations/svccontroller.k3s.cattle.io~1disablelb
