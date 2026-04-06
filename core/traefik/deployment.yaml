@@ -38,7 +38,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: traefik
-          image: rancher/mirrored-library-traefik:3.6.10
+          image: rancher/mirrored-library-traefik:3.6.12
           args:
             - --entryPoints.metrics.address=:9100/tcp
             - --entryPoints.traefik.address=:8080/tcp
