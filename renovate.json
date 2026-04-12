@@ -4,7 +4,7 @@
     "config:recommended"
   ],
   "timezone": "Europe/Copenhagen",
-  "schedule": ["before 6am on monday"],
+  "schedule": ["before 6am every day"],
   "labels": ["dependencies"],
   "kubernetes": {
     "managerFilePatterns": [
