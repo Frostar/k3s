@@ -6,7 +6,7 @@ global:
   systemDefaultRegistry: ""
 image:
   repository: rancher/mirrored-library-traefik
-  tag: 3.5.1
+  tag: 3.6.13
 api:
   insecure: true
   dashboard: true

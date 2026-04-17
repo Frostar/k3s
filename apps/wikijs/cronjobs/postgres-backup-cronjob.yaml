@@ -19,7 +19,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: postgres-backup
-            image: ghcr.io/frostar/postgre-backup:2.0.0
+            image: ghcr.io/frostar/postgre-backup:v2.0.3
             env:
             - name: PGHOST
               value: "postgresql.wikijs.svc.cluster.local"
