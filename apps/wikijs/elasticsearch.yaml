@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: elasticsearch
-        image: docker.elastic.co/elasticsearch/elasticsearch:8.19.13
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.19.14
         ports:
         - containerPort: 9200
           name: http
