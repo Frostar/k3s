@@ -16,7 +16,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: renovate
-              image: docker.io/renovate/renovate:43.160.6
+              image: docker.io/renovate/renovate:43.160.7
               env:
                 - name: RENOVATE_TOKEN
                   valueFrom:
