@@ -12,10 +12,33 @@
       "/core/.+\\.yaml$/"
     ]
   },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track k3s version pinned in system-upgrade-controller Plans",
+      "managerFilePatterns": [
+        "/core/system-upgrade-controller/(server|agent)-plan\\.yaml$/"
+      ],
+      "matchStrings": [
+        "version:\\s*(?<currentValue>v\\d+\\.\\d+\\.\\d+\\+k3s\\d+)"
+      ],
+      "depNameTemplate": "k3s-io/k3s",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+k3s(?<build>\\d+)$"
+    }
+  ],
   "packageRules": [
+    {
+      "description": "k3s upgrades get their own PR so they're not buried in the weekly grouped bump",
+      "matchPackageNames": ["k3s-io/k3s"],
+      "matchDatasources": ["github-releases"],
+      "groupName": "k3s",
+      "labels": ["dependencies", "k3s-upgrade"]
+    },
     {
       "description": "Group all non-major updates together",
       "matchUpdateTypes": ["minor", "patch", "digest"],
+      "matchPackageNames": ["!k3s-io/k3s"],
       "groupName": "all non-major dependencies",
       "groupSlug": "all-non-major"
     },
