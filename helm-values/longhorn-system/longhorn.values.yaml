@@ -1,2 +1,3 @@
 defaultSettings:
   defaultDataPath: /storage1
+  createDefaultDiskLabeledNodes: true
