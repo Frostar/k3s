@@ -102,6 +102,59 @@ kubectl apply -f argocd/apps/root-app.yaml
 
 After step 4, ArgoCD will sync all Applications (apps, core, secrets) from this repo.
 
+## Cluster Upgrades — system-upgrade-controller
+
+k3s itself is upgraded declaratively via Rancher's `system-upgrade-controller`. Two `Plan` CRs live in `core/system-upgrade-controller/`:
+
+- `server-plan.yaml` — matches nodes with the `node-role.kubernetes.io/control-plane` label
+- `agent-plan.yaml` — matches workers; `prepare` references `k3s-server` so workers wait for the control plane
+
+Both Plans additionally require `k3s-upgrade=true` on the node. Without that label, the Plans match zero nodes and the controller does nothing. This is the opt-in gate — Plans can stay committed on `main` without any risk of firing.
+
+### Running an upgrade
+
+1. Pick a target version. Pin to an exact tag (never a channel — channels auto-bump). For patch bumps within the running minor, take the latest of that minor; for minor bumps, do one at a time and verify Longhorn / cert-manager / Authentik compatibility first.
+
+2. Update `spec.version` in **both** `server-plan.yaml` and `agent-plan.yaml`. Commit and push. Wait for Argo CD to sync (`kubectl --context k3s-context get application system-upgrade-controller -n argocd`).
+
+3. Trigger the control plane first:
+
+   ```bash
+   kubectl --context k3s-context label node kube01 k3s-upgrade=true
+   kubectl --context k3s-context -n system-upgrade get jobs -w
+   ```
+
+   The control-plane upgrade cordons, drains, runs the `rancher/k3s-upgrade` image, restarts k3s, and uncordons. Expect 3–5 min. The cluster API will be briefly unreachable while k3s restarts on kube01 (it is the only control-plane node).
+
+4. Verify before continuing:
+
+   ```bash
+   kubectl --context k3s-context get nodes   # kube01 must show target version
+   ```
+
+5. Trigger the workers. `concurrency: 1` on the Plan serializes them even if all are labeled together:
+
+   ```bash
+   kubectl --context k3s-context label node kube02 kube03 kube04 k3s-upgrade=true
+   ```
+
+6. Once all nodes are on the new version, remove the labels so the Plans are dormant again:
+
+   ```bash
+   kubectl --context k3s-context label node kube01 kube02 kube03 kube04 k3s-upgrade-
+   ```
+
+### Known interactions during a node upgrade
+
+- **Longhorn replicas** on the draining node detach and reattach elsewhere. With 3 replicas (current default) there is no data loss; expect a brief I/O blip on volumes whose primary replica was on that node.
+- **kube04 hosts pinned StatefulSets** (`prometheus-0`, `grafana`, `wikijs/postgresql-0`). They will restart when kube04 upgrades. Plan upgrades during a maintenance window if any of these are user-visible at the time.
+- **Argo CD itself runs on kube01**. The CLI will pause briefly during the kube01 upgrade window; in-flight syncs resume afterwards.
+- **system-upgrade-controller runs on the control-plane**, so it gets restarted during the kube01 upgrade. Rancher's design handles this — the Plan continues from where it left off after the controller restarts.
+
+### Adding a fifth node (or replacing a node)
+
+Label the new node with `node.longhorn.io/create-default-disk=config` if it should host Longhorn replicas (kube01-03 have this; kube04 does not). Without it, the `createDefaultDiskLabeledNodes: true` setting in `helm-values/longhorn-system/longhorn.values.yaml` will keep Longhorn from creating a default disk on the new node.
+
 ## GitOps Source-of-Truth Rule
 
 **Every cluster configuration must be reflected as a file in this repository. The repo is the single source of truth — not the cluster.**
