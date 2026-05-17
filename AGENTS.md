@@ -144,6 +144,27 @@ Both Plans additionally require `k3s-upgrade=true` on the node. Without that lab
    kubectl --context k3s-context label node kube01 kube02 kube03 kube04 k3s-upgrade-
    ```
 
+### Pre-flight check on worker nodes
+
+Each worker should have **exactly one** k3s systemd unit active: `k3s-agent.service`. kube02 and kube03 historically had a stale `k3s.service` (server) left over from their original install, stuck in `activating/start` with a `k3s server` process running alongside `k3s agent`. The upgrade controller's safety script aborts with `Found multiple K3s pids` when this happens.
+
+To check from this machine:
+
+```bash
+for n in kube02 kube03 kube04; do
+  echo "=== $n ==="
+  ssh $n "sudo systemctl list-units --all 'k3s*' --no-pager | grep -E 'k3s.*service'"
+done
+```
+
+To clean up if a stale `k3s.service` exists on a worker:
+
+```bash
+ssh <node> "sudo systemctl disable --now k3s.service"
+```
+
+Only kube01 should run `k3s.service` (server). All workers should run only `k3s-agent.service`.
+
 ### Known interactions during a node upgrade
 
 - **Longhorn replicas** on the draining node detach and reattach elsewhere. With 3 replicas (current default) there is no data loss; expect a brief I/O blip on volumes whose primary replica was on that node.
