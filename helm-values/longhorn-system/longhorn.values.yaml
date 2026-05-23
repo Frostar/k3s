@@ -1,3 +1,5 @@
 defaultSettings:
   defaultDataPath: /storage1
   createDefaultDiskLabeledNodes: true
+  backupTarget: s3://longhorn@dummyregion/
+  backupTargetCredentialSecret: backup-secret
