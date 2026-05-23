@@ -29,11 +29,12 @@
   ],
   "packageRules": [
     {
-      "description": "k3s upgrades get their own PR so they're not buried in the weekly grouped bump",
+      "description": "k3s upgrades get their own PR per minor version so we can roll out one minor at a time",
       "matchPackageNames": ["k3s-io/k3s"],
       "matchDatasources": ["github-releases"],
       "groupName": "k3s",
-      "labels": ["dependencies", "k3s-upgrade"]
+      "labels": ["dependencies", "k3s-upgrade"],
+      "separateMultipleMinor": true
     },
     {
       "description": "Group all non-major updates together",
