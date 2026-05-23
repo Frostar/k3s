@@ -111,7 +111,7 @@ spec:
     protocol: TCP
     name: setup
 ---
-# ClusterIP for web admin UI — for Traefik IngressRoute once initial setup is done
+# ClusterIP for web admin UI — fronted by the Ingress below.
 apiVersion: v1
 kind: Service
 metadata:
@@ -126,3 +126,30 @@ spec:
     targetPort: 80
     protocol: TCP
     name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adguard
+  namespace: adguard
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: adguard.lunding.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: adguard-web
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - adguard.lunding.xyz
+    secretName: adguard-lunding-tls
