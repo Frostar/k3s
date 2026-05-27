@@ -82,7 +82,6 @@ Reserved IPs (do not reuse):
 | IP | Service |
 |---|---|
 | `192.168.10.120` | Traefik |
-| `192.168.10.124` | amidumb |
 | `192.168.10.130` | ArgoCD |
 | `192.168.10.131` | AdGuard Home (DNS — do not change) |
 
