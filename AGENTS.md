@@ -55,6 +55,17 @@ Recommended tools to add for stronger scanning (not yet installed):
 
 **Gotcha — `helm-values/<app>/` files only matter if something reads them.** A `values.yaml` here is inert unless the corresponding Argo CD Application is a Helm source (`source.helm.valueFiles` or `source.chart`) that explicitly references it. If the Argo Application uses a `Directory` source pointing at `apps/<name>/`, the `helm-values/<name>/` file is **not** wired up — Renovate may still bump tags in it, but nothing on the cluster changes. Before editing or trusting a `helm-values/` file, check `argocd/apps/<name>.yaml` to confirm it is actually a Helm source.
 
+**Gotcha — switching an Argo Application's source type can prune resources via shared labels.** Argo CD's default resource-tracking method is the `app.kubernetes.io/instance` label. When an App's source changes (e.g. Directory → Helm chart) but its name stays the same, any cluster-scoped resources it previously claimed via that label become candidates for **prune** if the new render does not include them and `syncPolicy.automated.prune` is on. This bit us during the cert-manager/metallb migration on 2026-05-27: switching `metallb` to a chart source deleted the user-supplied `IPAddressPool` and `L2Advertisement` resources (they carried `instance=metallb` from the previous Directory source App) because the chart does not render them. All LoadBalancer services lost their IPs for ~5 minutes.
+
+When switching an App's source type:
+
+1. **Disable `syncPolicy.automated`** on the App first (`kubectl -n argocd patch application <name> --type=merge -p '{"spec":{"syncPolicy":null}}'`). This prevents auto-prune the moment the new spec is applied.
+2. **Inventory cluster-scoped or user-supplied resources** the App previously owned. Anything not rendered by the new source needs a new home — either a separate Argo App (e.g. `metallb-config` for the IPAddressPools), or moved into the chart values via `extraObjects` / `extraDeploy`.
+3. **Strip the `app.kubernetes.io/instance` label** from those orphaned resources, or move them under their new App, *before* syncing the renamed source.
+4. **Sync manually and review the diff** in the Argo UI. Adoption is fine; deletion of anything you didn't expect is the warning sign.
+
+Note that `syncPolicy: {}` in git is interpreted by strategic-merge-patch as "leave the existing field alone", so it will **not** reset a live `automated:` syncPolicy. You must patch live explicitly.
+
 ## Networking — MetalLB IP Pools
 
 This cluster uses MetalLB for bare-metal LoadBalancer IPs. Two pools are defined:
