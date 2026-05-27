@@ -1,3 +1,6 @@
+crds:
+  enabled: true
+  keep: true
 ingressShim:
   defaultIssuerKind: ClusterIssuer
   defaultIssuerName: letsencrypt-prod

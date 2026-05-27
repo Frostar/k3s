@@ -5,10 +5,16 @@ metadata:
   namespace: argocd
 spec:
   project: homelab
-  source:
-    repoURL: https://github.com/Frostar/k3s
-    targetRevision: HEAD
-    path: core/metallb
+  sources:
+    - chart: metallb
+      repoURL: https://metallb.github.io/metallb
+      targetRevision: 0.15.3
+      helm:
+        valueFiles:
+          - $values/helm-values/metallb-system/metallb.values.yaml
+    - repoURL: https://github.com/Frostar/k3s
+      targetRevision: HEAD
+      ref: values
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb-system

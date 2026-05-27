@@ -5,10 +5,16 @@ metadata:
   namespace: argocd
 spec:
   project: homelab
-  source:
-    repoURL: https://github.com/Frostar/k3s
-    targetRevision: HEAD
-    path: core/cert-manager
+  sources:
+    - chart: cert-manager
+      repoURL: https://charts.jetstack.io
+      targetRevision: v1.19.2
+      helm:
+        valueFiles:
+          - $values/helm-values/cert-manager/cert-manager.values.yaml
+    - repoURL: https://github.com/Frostar/k3s
+      targetRevision: HEAD
+      ref: values
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager
