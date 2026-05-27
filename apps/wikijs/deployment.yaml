@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wiki
+  namespace: wikijs
+  labels:
+    app.kubernetes.io/instance: wiki
+    app.kubernetes.io/name: wiki
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: wiki
+      app.kubernetes.io/name: wiki
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: wiki
+        app.kubernetes.io/name: wiki
+    spec:
+      serviceAccountName: wiki
+      containers:
+        - name: wiki
+          image: requarks/wiki:2.5.314
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: DB_TYPE
+              value: postgres
+            - name: DB_HOST
+              value: postgresql.wikijs.svc.cluster.local
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: wiki
+            - name: DB_USER
+              value: wikijs
+            - name: DB_SSL
+              value: "false"
+            - name: DB_SSL_CA
+              value: ""
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: wikijs-secrets
+                  key: POSTGRES_PASSWORD
+            - name: HA_ACTIVE
+              value: "false"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 60
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi

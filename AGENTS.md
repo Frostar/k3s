@@ -53,6 +53,8 @@ Recommended tools to add for stronger scanning (not yet installed):
 - If converting a Helm-managed app to raw manifests, export the rendered templates and commit them to `apps/<name>/`.
 - Helm values files in `helm-values/` are only for existing Helm-managed components.
 
+**Gotcha — `helm-values/<app>/` files only matter if something reads them.** A `values.yaml` here is inert unless the corresponding Argo CD Application is a Helm source (`source.helm.valueFiles` or `source.chart`) that explicitly references it. If the Argo Application uses a `Directory` source pointing at `apps/<name>/`, the `helm-values/<name>/` file is **not** wired up — Renovate may still bump tags in it, but nothing on the cluster changes. Before editing or trusting a `helm-values/` file, check `argocd/apps/<name>.yaml` to confirm it is actually a Helm source.
+
 ## Networking — MetalLB IP Pools
 
 This cluster uses MetalLB for bare-metal LoadBalancer IPs. Two pools are defined:
