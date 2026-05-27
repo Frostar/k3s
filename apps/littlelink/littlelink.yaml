@@ -189,7 +189,7 @@ metadata:
   name: littlelink-svc
   namespace: public-sites
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: littlelink-server
   ports:

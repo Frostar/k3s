@@ -4,7 +4,7 @@ metadata:
   name: wiki-metallb
   namespace: wikijs
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app.kubernetes.io/name: wiki
     app.kubernetes.io/instance: wiki
