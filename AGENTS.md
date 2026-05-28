@@ -93,6 +93,31 @@ Reserved IPs (do not reuse):
 
 ### Phase 0 — Install k3s on fresh nodes
 
+**Mount the SSDs (kube01, kube02, kube03 only)**
+
+Do this before installing k3s. Longhorn's default disk path is `/storage1`; if the mount isn't present when Longhorn first starts it will see no disk and skip the node.
+
+If the SSDs were **preserved** (OS reinstall, disks not wiped) just re-add the fstab entries and mount — Longhorn will recognise the existing replica data:
+
+```bash
+# kube01, kube02
+echo '/dev/sda /storage1 ext4 defaults 0 0' | sudo tee -a /etc/fstab
+sudo mkdir -p /storage1 && sudo mount -a
+
+# kube03 only — has a second SSD (unused by Longhorn, but keep it mounted)
+echo '/dev/sda /storage1 ext4 defaults 0 0' | sudo tee -a /etc/fstab
+echo '/dev/sdb /storage2 ext4 defaults 0 0' | sudo tee -a /etc/fstab
+sudo mkdir -p /storage1 /storage2 && sudo mount -a
+```
+
+If the SSDs were **wiped**, format first:
+
+```bash
+sudo mkfs.ext4 /dev/sda   # repeat for /dev/sdb on kube03
+```
+
+Then add the fstab entries and mount as above. Longhorn will create fresh empty volumes — all PVC data is lost. Recovery: restore AdGuard config manually (DNS rewrites are in `CLAUDE.md`), and restore PostgreSQL databases from the dump-job backups on MinIO (`espeon:9000`).
+
 **kube01 (control plane)**
 
 Create `/etc/rancher/k3s/config.yaml` before running the installer — without it k3s bundles its own Traefik and ServiceLB, which conflict with the cluster's:
@@ -110,11 +135,19 @@ Then install (pin the version to match the rest of the cluster — check `kubect
 curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.36.1+k3s1 sh -
 ```
 
-Copy the kubeconfig to your workstation:
+Copy the kubeconfig to your workstation and fix it up:
 
 ```bash
 scp kube01:/etc/rancher/k3s/k3s.yaml ~/.kube/k3s.yaml
-# Edit the server field: replace 127.0.0.1 with 192.168.10.211
+# Replace the loopback address with kube01's IP, and rename the context
+# so it matches the name used throughout this repo (k3s-context)
+sed -i \
+  -e 's|https://127.0.0.1:6443|https://192.168.10.211:6443|' \
+  -e 's/name: default/name: k3s-context/g' \
+  -e 's/cluster: default/cluster: k3s-context/g' \
+  -e 's/user: default/user: k3s-context/g' \
+  -e 's/current-context: default/current-context: k3s-context/' \
+  ~/.kube/k3s.yaml
 ```
 
 **kube02, kube03, kube04 (workers)**
