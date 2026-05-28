@@ -91,6 +91,8 @@ Reserved IPs (do not reuse):
 
 ## Bootstrap Instructions
 
+The four nodes run on a **Turing Pi 2** mini-ITX board (slots 1–4 = kube01–kube04). The board has a BMC for out-of-band power control and flashing. See the official docs for physical layout, BMC access, and OS flashing: https://docs.turingpi.com/docs/turing-pi2-intro
+
 ### Phase 0 — Install k3s on fresh nodes
 
 **Mount the SSDs (kube01, kube02, kube03 only)**
