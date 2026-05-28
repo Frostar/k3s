@@ -91,6 +91,76 @@ Reserved IPs (do not reuse):
 
 ## Bootstrap Instructions
 
+### Phase 0 — Install k3s on fresh nodes
+
+**kube01 (control plane)**
+
+Create `/etc/rancher/k3s/config.yaml` before running the installer — without it k3s bundles its own Traefik and ServiceLB, which conflict with the cluster's:
+
+```yaml
+# /etc/rancher/k3s/config.yaml on kube01
+disable:
+  - servicelb
+  - traefik
+```
+
+Then install (pin the version to match the rest of the cluster — check `kubectl get nodes` or `AGENTS.md` for the current version):
+
+```bash
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.36.1+k3s1 sh -
+```
+
+Copy the kubeconfig to your workstation:
+
+```bash
+scp kube01:/etc/rancher/k3s/k3s.yaml ~/.kube/k3s.yaml
+# Edit the server field: replace 127.0.0.1 with 192.168.10.211
+```
+
+**kube02, kube03, kube04 (workers)**
+
+Grab the cluster token from kube01, then install the agent on each worker:
+
+```bash
+TOKEN=$(ssh kube01 sudo cat /var/lib/rancher/k3s/server/token)
+
+for node in kube02 kube03 kube04; do
+  ssh $node "curl -sfL https://get.k3s.io | \
+    INSTALL_K3S_VERSION=v1.36.1+k3s1 \
+    K3S_URL=https://192.168.10.211:6443 \
+    K3S_TOKEN=$TOKEN sh -"
+done
+```
+
+**Apply node labels**
+
+Longhorn uses a label to decide which nodes get a default disk. kube01–03 each have an SSD at `/storage1`; kube04 does not and must not host replicas:
+
+```bash
+kubectl label node kube01 kube02 kube03 node.longhorn.io/create-default-disk=config
+# kube04 intentionally omitted
+```
+
+After Longhorn is running (ArgoCD will deploy it in Phase 2), re-apply the kube04 Longhorn Node CRD patch to prevent replica scheduling there:
+
+```bash
+kubectl --context k3s-context -n longhorn-system patch nodes.longhorn.io kube04 \
+  --type=merge -p '{"spec":{"allowScheduling":false,"evictionRequested":true,"disks":{"default-disk-d6c2e7766f5bd2d5":{"allowScheduling":false,"evictionRequested":true,"diskDriver":"","diskType":"filesystem","path":"/storage1","storageReserved":9186888499,"tags":[]}}}}'
+```
+
+### Phase 1 — Install ArgoCD
+
+Install ArgoCD (match the version currently pinned in the cluster — `v3.2.3` as of this writing):
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f \
+  https://raw.githubusercontent.com/argoproj/argo-cd/v3.2.3/manifests/install.yaml
+kubectl rollout status deployment/argocd-server -n argocd
+```
+
+### Phase 2 — Bootstrap GitOps
+
 Run these once to bring up ArgoCD GitOps from scratch:
 
 ```bash
