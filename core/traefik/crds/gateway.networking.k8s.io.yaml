@@ -25,6 +25,7 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/4530
     gateway.networking.k8s.io/bundle-version: v1.5.1
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   labels:
     gateway.networking.k8s.io/policy: Direct
@@ -1411,6 +1412,7 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/4530
     gateway.networking.k8s.io/bundle-version: v1.5.1
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   name: gatewayclasses.gateway.networking.k8s.io
 spec:
@@ -1930,6 +1932,7 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/4530
     gateway.networking.k8s.io/bundle-version: v1.5.1
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   name: gateways.gateway.networking.k8s.io
 spec:
@@ -5217,6 +5220,7 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/4530
     gateway.networking.k8s.io/bundle-version: v1.5.1
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   name: grpcroutes.gateway.networking.k8s.io
 spec:
@@ -7291,6 +7295,7 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/4530
     gateway.networking.k8s.io/bundle-version: v1.5.1
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   name: httproutes.gateway.networking.k8s.io
 spec:
@@ -14224,6 +14229,7 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/4530
     gateway.networking.k8s.io/bundle-version: v1.5.1
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   name: listenersets.gateway.networking.k8s.io
 spec:
@@ -15008,6 +15014,7 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/4530
     gateway.networking.k8s.io/bundle-version: v1.5.1
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   name: referencegrants.gateway.networking.k8s.io
 spec:
@@ -15365,6 +15372,7 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/4530
     gateway.networking.k8s.io/bundle-version: v1.5.1
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   name: tlsroutes.gateway.networking.k8s.io
 spec:
@@ -17482,6 +17490,7 @@ kind: ValidatingAdmissionPolicy
 metadata:
   annotations:
     gateway.networking.k8s.io/bundle-version: v1.5.0-dev
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   name: "safe-upgrades.gateway.networking.k8s.io"
 spec:
@@ -17514,6 +17523,7 @@ kind: ValidatingAdmissionPolicyBinding
 metadata:
   annotations:
     gateway.networking.k8s.io/bundle-version: v1.5.0-dev
+    argocd.argoproj.io/sync-options: Replace=true
     gateway.networking.k8s.io/channel: standard
   name: safe-upgrades.gateway.networking.k8s.io
 spec:
