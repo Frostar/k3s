@@ -54,6 +54,8 @@ spec:
             - --providers.kubernetesingress.allowEmptyServices=true
             - --providers.kubernetesingress.ingressendpoint.publishedservice=kube-system/traefik
             - --entryPoints.websecure.http.tls=true
+            - --entryPoints.web.forwardedHeaders.trustedIPs=127.0.0.1/32,10.42.0.0/16,10.43.0.0/16
+            - --entryPoints.websecure.forwardedHeaders.trustedIPs=127.0.0.1/32,10.42.0.0/16,10.43.0.0/16
             - --log.level=INFO
           ports:
             - name: metrics
