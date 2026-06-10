@@ -44,7 +44,7 @@ spec:
             name: argocd-cmp-sops-plugin
       initContainers:
         - name: download-sops
-          image: alpine:3.23
+          image: alpine:3.24
           command: [sh, -c]
           args:
             - wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/v3.12.1/sops-v3.12.1.linux.arm64
