@@ -124,14 +124,17 @@ Then add the fstab entries and mount as above. Longhorn will create fresh empty 
 
 **kube01 (control plane)**
 
-Create `/etc/rancher/k3s/config.yaml` before running the installer — without it k3s bundles its own Traefik and ServiceLB, which conflict with the cluster's:
+Create `/etc/rancher/k3s/config.yaml` before running the installer — without it k3s bundles its own Traefik, ServiceLB, and CoreDNS, which conflict with the cluster's self-managed versions:
 
 ```yaml
 # /etc/rancher/k3s/config.yaml on kube01
 disable:
   - servicelb
   - traefik
+  - coredns
 ```
+
+CoreDNS is self-managed under `core/coredns/` (2 replicas + PodDisruptionBudget for HA) instead of the single-replica k3s addon. Its Corefile inlines the node host entries (kube01-04) that the k3s addon used to maintain dynamically in the `NodeHosts` ConfigMap key — **adding or renaming a node requires updating that `hosts` block** in `core/coredns/configmap.yaml`. When taking over CoreDNS from a fresh k3s install, the addon objects must be adopted by ArgoCD (server-side apply) and their `objectset.rio.cattle.io/*` owner markers stripped before disabling the addon, otherwise k3s prunes them on restart and causes a DNS outage.
 
 Then install (pin the version to match the rest of the cluster — check `kubectl get nodes` or `AGENTS.md` for the current version):
 
