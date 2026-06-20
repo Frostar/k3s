@@ -55,6 +55,12 @@ spec:
         - random_page_cost=1.1
         - -c
         - effective_io_concurrency=200
+        # Disable JIT: authentik's polymorphic queries (e.g. source lookups in
+        # the auth flow) can get huge cost mis-estimates that trigger multi-second
+        # LLVM JIT compilation on this ARM CPU. JIT gives no benefit for authentik's
+        # OLTP workload. See login-flow latency investigation (8s -> ~0.5s).
+        - -c
+        - jit=off
         - -c
         - max_connections=100
         - -c
