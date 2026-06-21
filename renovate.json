@@ -54,9 +54,9 @@
       "pinDigests": false
     },
     {
-      "description": "Wiki.js does not support Elasticsearch 9, stay on 8.x",
+      "description": "Wiki.js 2.x supports only Elasticsearch 6.x/7.x — stay on the 7.x line (8.x breaks the search client)",
       "matchPackageNames": ["docker.elastic.co/elasticsearch/elasticsearch"],
-      "allowedVersions": "<9"
+      "allowedVersions": "<8"
     },
     {
       "description": "Stay on v0.19.x for rancher/system-upgrade-controller until v0.20.0 is officially released",
