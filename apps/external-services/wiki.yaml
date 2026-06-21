@@ -84,34 +84,3 @@ spec:
             name: wiki
             port:
               number: 80
-
----
-# GraphQL API endpoint — bypasses Authentik ForwardAuth (Wiki.js Bearer-token protected).
-# Internal hostname only (wiki.lunding.xyz), NOT the public wiki.j-frost.dk.
-# Mirrors the /login bypass pattern above. Consumed by the Wiki.js MCP server / automation.
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: wiki-graphql-api
-  namespace: wikijs
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.middlewares: default-security-headers@kubernetescrd
-    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
-spec:
-  ingressClassName: traefik
-  tls:
-  - hosts:
-    - wiki.lunding.xyz
-    secretName: wiki-lunding-tls
-  rules:
-  - host: wiki.lunding.xyz
-    http:
-      paths:
-      - path: /graphql
-        pathType: Prefix
-        backend:
-          service:
-            name: wiki
-            port:
-              number: 80
