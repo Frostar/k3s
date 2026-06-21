@@ -66,6 +66,8 @@ spec:
         - sh
         - -c
         - |
+          # TEMP one-time wipe: clear leftover ES 8.x data so 7.17 boots (index is rebuilt from Postgres). Revert after.
+          rm -rf /usr/share/elasticsearch/data/* /usr/share/elasticsearch/data/.[!.]* 2>/dev/null || true
           chown -R 1000:1000 /usr/share/elasticsearch/data
         securityContext:
           runAsUser: 0
