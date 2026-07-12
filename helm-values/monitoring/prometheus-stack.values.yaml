@@ -92,7 +92,13 @@ nodeExporter:
 prometheus:
   enabled: true
   prometheusSpec:
-    additionalScrapeConfigs: []
+    additionalScrapeConfigs:
+      - job_name: hoothoot
+        static_configs:
+          - targets:
+              - 192.168.10.53:9100
+            labels:
+              node: hoothoot
     podMonitorSelectorNilUsesHelmValues: false
     resources:
       limits:
