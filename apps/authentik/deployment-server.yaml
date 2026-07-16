@@ -80,7 +80,7 @@ spec:
         envFrom:
         - secretRef:
             name: authentik
-        image: docker.io/authentik/server:2026.5.4
+        image: docker.io/authentik/server:2026.5.5
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
