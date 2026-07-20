@@ -25,6 +25,11 @@ spec:
         app.kubernetes.io/name: wiki
     spec:
       serviceAccountName: wiki
+      # Wiki.js git storage sync leaks zombie git/ssh processes when node runs
+      # as PID 1 (orphans are never reaped, eventually exhausting the pod's PID
+      # cgroup limit -> "spawn git EAGAIN"). Sharing the process namespace makes
+      # the pause container PID 1, which reaps zombies.
+      shareProcessNamespace: true
       containers:
         - name: wiki
           image: requarks/wiki:2.5.314
