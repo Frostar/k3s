@@ -70,6 +70,12 @@ spec:
             - name: websecure
               containerPort: 8443
               protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              memory: 512Mi
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
