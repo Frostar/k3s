@@ -1,7 +1,10 @@
 # DR (Danmarks Radio) live channels — plain HLS, no DRM, no auth.
 # Discovered via production.dr-massive.com/api/channels/<id>/liveStreams
 # (channel ids: DR1=20875, DR2=20876, Ramasjang=20892, Ekstra=192100, TVA=192099).
-# If a URL ever rotates, re-fetch via that API. See wiki: /Homelab/DRTV-Downloads.
+# 6.m3u8 is the 1080p50 variant of each master.m3u8 — pinned because
+# Threadfin's ffmpeg buffer would otherwise copy every ABR variant into
+# the output stream. If a URL ever rotates, re-fetch via that API.
+# See wiki: /Homelab/DRTV-Downloads.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -11,12 +14,12 @@ data:
   dr-live.m3u: |
     #EXTM3U
     #EXTINF:-1 tvg-id="DR1.dk" tvg-chno="1" group-title="DR",DR1
-    https://drlivedr1hls.akamaized.net/hls/live/2113625/drlivedr1/master.m3u8
+    https://drlivedr1hls.akamaized.net/hls/live/2113625/drlivedr1/6.m3u8
     #EXTINF:-1 tvg-id="DR2.dk" tvg-chno="2" group-title="DR",DR2
-    https://drlivedr2hls.akamaized.net/hls/live/2113623/drlivedr2/master.m3u8
+    https://drlivedr2hls.akamaized.net/hls/live/2113623/drlivedr2/6.m3u8
     #EXTINF:-1 tvg-id="DRRamasjang.dk" tvg-chno="3" group-title="DR",DR Ramasjang
-    https://drlivedrrhls.akamaized.net/hls/live/2113621/drlivedrr/master.m3u8
+    https://drlivedrrhls.akamaized.net/hls/live/2113621/drlivedrr/6.m3u8
     #EXTINF:-1 tvg-id="DRTVEkstra.dk" tvg-chno="4" group-title="DR",DRTV Ekstra
-    https://drlivedrtvbhls.akamaized.net/hls/live/2113611/drlivedrtvb/master.m3u8
+    https://drlivedrtvbhls.akamaized.net/hls/live/2113611/drlivedrtvb/6.m3u8
     #EXTINF:-1 tvg-id="DRTVA.dk" tvg-chno="5" group-title="DR",TVA Live
-    https://drlivedrtvahls.akamaized.net/hls/live/2113613/drlivedrtva/master.m3u8
+    https://drlivedrtvahls.akamaized.net/hls/live/2113613/drlivedrtva/6.m3u8
