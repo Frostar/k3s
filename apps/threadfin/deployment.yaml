@@ -87,7 +87,11 @@ spec:
         command:
         - sh
         - -c
-        - while true; do python /scripts/dr_epg.py /epg/dr.xml || echo "dr-epg: generation failed, retrying next cycle"; sleep 21600; done
+        - |
+          while true; do
+            python /scripts/dr_epg.py /epg/dr.xml || echo "dr-epg generation failed, retrying next cycle"
+            sleep 21600
+          done
         env:
         - name: TZ
           value: Europe/Copenhagen
