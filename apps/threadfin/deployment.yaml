@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: threadfin
+  namespace: threadfin
+  labels:
+    app: threadfin
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: threadfin
+  template:
+    metadata:
+      labels:
+        app: threadfin
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 31337
+        runAsGroup: 31337
+        fsGroup: 31337
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: threadfin
+        image: fyb3roptik/threadfin:1.2.37
+        ports:
+        - containerPort: 34400
+          name: http
+          protocol: TCP
+        env:
+        - name: TZ
+          value: Europe/Copenhagen
+        # /var/log is not writable as non-root; keep the log on the temp volume
+        - name: THREADFIN_LOG
+          value: /tmp/threadfin/threadfin.log
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: conf
+          mountPath: /home/threadfin/conf
+        - name: temp
+          mountPath: /tmp/threadfin
+        - name: cache
+          mountPath: /home/threadfin/cache
+        - name: playlists
+          mountPath: /home/threadfin/playlists
+          readOnly: true
+        readinessProbe:
+          httpGet:
+            path: /web/
+            port: 34400
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /web/
+            port: 34400
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+      volumes:
+      - name: conf
+        persistentVolumeClaim:
+          claimName: threadfin-conf
+      - name: temp
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: cache
+        emptyDir: {}
+      - name: playlists
+        configMap:
+          name: threadfin-playlists

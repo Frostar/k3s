@@ -1,0 +1,32 @@
+# LoadBalancer so Jellyfin on umbreon (TrueNAS) can reach the emulated
+# HDHomeRun tuner directly over the LAN. IP auto-assigned from default-pool.
+apiVersion: v1
+kind: Service
+metadata:
+  name: threadfin
+  namespace: threadfin
+spec:
+  type: LoadBalancer
+  selector:
+    app: threadfin
+  ports:
+  - port: 34400
+    targetPort: 34400
+    protocol: TCP
+    name: http
+---
+# ClusterIP for the web UI — fronted by the Ingress.
+apiVersion: v1
+kind: Service
+metadata:
+  name: threadfin-web
+  namespace: threadfin
+spec:
+  type: ClusterIP
+  selector:
+    app: threadfin
+  ports:
+  - port: 34400
+    targetPort: 34400
+    protocol: TCP
+    name: http
