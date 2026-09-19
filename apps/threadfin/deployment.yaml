@@ -17,6 +17,11 @@ spec:
       labels:
         app: threadfin
     spec:
+      # The Service is named "threadfin", so kubelet would inject
+      # THREADFIN_PORT=tcp://<clusterip>:34400 (legacy Docker links),
+      # clobbering the image's THREADFIN_PORT=34400 and crashing the
+      # entrypoint ("too many colons in address").
+      enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 31337
@@ -34,6 +39,8 @@ spec:
         env:
         - name: TZ
           value: Europe/Copenhagen
+        - name: THREADFIN_PORT
+          value: "34400"
         # /var/log is not writable as non-root; keep the log on the temp volume
         - name: THREADFIN_LOG
           value: /tmp/threadfin/threadfin.log
