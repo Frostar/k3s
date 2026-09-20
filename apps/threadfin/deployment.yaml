@@ -83,7 +83,7 @@ spec:
             cpu: "1000m"
       # Regenerates XMLTV guide data from DR's public schedules API every 6h.
       - name: dr-epg
-        image: python:3.13-alpine
+        image: python:3.14-alpine
         command:
         - sh
         - -c
