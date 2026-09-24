@@ -15,6 +15,13 @@
 #   UPGRADE_THRESHOLD_MB - re-download files smaller than this (default 0)
 #   SEASON_DIR_PATTERN   - season folder name (default "s{N}")
 #   TITLE_ALIASES        - JSON {"danish title": [season, episode]}
+#   HEARTBEAT_URL        - Uptime Kuma push URL; add a key to the
+#                          kuma-heartbeat secret and reference it:
+#                            valueFrom:
+#                              secretKeyRef:
+#                                name: kuma-heartbeat
+#                                key: <show>
+#                                optional: true
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -37,7 +44,7 @@ spec:
             - name: ghcr-pull-secret
           containers:
             - name: dr-downloader
-              image: ghcr.io/frostar/dr-downloader:1.0.1
+              image: ghcr.io/frostar/dr-downloader:1.0.2
               env:
                 - name: DR_SERIES_URL
                   value: "https://www.dr.dk/drtv/serie/<SHOW-SLUG>"
