@@ -1,0 +1,58 @@
+# Daily check for new Bluey episodes on DRTV (dr.dk).
+# DR rotates availability; episodes are matched by Danish title against
+# TheTVDB (DR's own episode numbering is off by one for Bluey).
+# Files below 100 MB (old YouTube rips) are re-downloaded in DR quality.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dr-downloader-bluey
+  namespace: dr-downloader
+spec:
+  schedule: "0 6 * * *"
+  timeZone: "Europe/Copenhagen"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 14400
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: ghcr-pull-secret
+          containers:
+            - name: dr-downloader
+              image: ghcr.io/frostar/dr-downloader:1.0.0
+              env:
+                - name: DR_SERIES_URL
+                  value: "https://www.dr.dk/drtv/serie/bluey_227278"
+                - name: NAS_PATH
+                  value: "Serier/Bluey"
+                - name: MATCH
+                  value: "tvdb_da"
+                - name: TVDB_SLUG
+                  value: "bluey-2018"
+                - name: UPGRADE_THRESHOLD_MB
+                  value: "100"
+                # TVDB's Danish translation list has gaps; map DR titles
+                # to [season, episode] manually here when the job logs
+                # "no TVDB match".
+                - name: TITLE_ALIASES
+                  value: '{"skak": [3, 11]}'
+              volumeMounts:
+                - name: media
+                  mountPath: /media
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "1"
+          volumes:
+            - name: media
+              nfs:
+                server: 192.168.10.249
+                path: /mnt/hdd/jellystorage

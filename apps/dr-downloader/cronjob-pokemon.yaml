@@ -1,0 +1,53 @@
+# Daily check for new Pokémon episodes on DRTV (dr.dk).
+# Syncs every season DR currently lists (handles S20 -> S21 -> ... rotation).
+# Episodes are named with official English titles from TVmaze, matching the
+# existing pkmns{N} library convention.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dr-downloader-pokemon
+  namespace: dr-downloader
+spec:
+  schedule: "30 6 * * *"
+  timeZone: "Europe/Copenhagen"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 14400
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: ghcr-pull-secret
+          containers:
+            - name: dr-downloader
+              image: ghcr.io/frostar/dr-downloader:1.0.0
+              env:
+                - name: DR_SERIES_URL
+                  value: "https://www.dr.dk/drtv/serie/pokemon-_-sol-og-maane_606810"
+                - name: NAS_PATH
+                  value: "Serier/Pokemon"
+                - name: MATCH
+                  value: "tvmaze_en"
+                - name: TVMAZE_ID
+                  value: "590"
+                - name: SEASON_DIR_PATTERN
+                  value: "pkmns{N}"
+              volumeMounts:
+                - name: media
+                  mountPath: /media
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "1"
+          volumes:
+            - name: media
+              nfs:
+                server: 192.168.10.249
+                path: /mnt/hdd/jellystorage

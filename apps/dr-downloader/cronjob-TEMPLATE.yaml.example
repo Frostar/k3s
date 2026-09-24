@@ -1,0 +1,62 @@
+# Template for following a new show on DRTV.
+#
+# 1. Copy to cronjob-<show>.yaml and replace every <PLACEHOLDER>.
+# 2. Pick a schedule that doesn't collide with the other jobs
+#    (stagger by 30 min).
+# 3. Commit + push — Argo CD deploys it. Nothing else is needed.
+#
+# MATCH strategies (see github.com/Frostar/dr-downloader):
+#   dr        - trust DR's own numbering/titles (zero config; start here)
+#   tvdb_da   - match Danish titles against TheTVDB; add TVDB_SLUG.
+#               Use when DR's numbering is wrong (e.g. Bluey).
+#   tvmaze_en - DR numbering + English titles from TVmaze; add TVMAZE_ID.
+#
+# Optional env:
+#   UPGRADE_THRESHOLD_MB - re-download files smaller than this (default 0)
+#   SEASON_DIR_PATTERN   - season folder name (default "s{N}")
+#   TITLE_ALIASES        - JSON {"danish title": [season, episode]}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dr-downloader-<SHOW>
+  namespace: dr-downloader
+spec:
+  schedule: "0 7 * * *"
+  timeZone: "Europe/Copenhagen"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 14400
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: ghcr-pull-secret
+          containers:
+            - name: dr-downloader
+              image: ghcr.io/frostar/dr-downloader:1.0.0
+              env:
+                - name: DR_SERIES_URL
+                  value: "https://www.dr.dk/drtv/serie/<SHOW-SLUG>"
+                - name: NAS_PATH
+                  value: "Serier/<SHOW-FOLDER>"
+                - name: MATCH
+                  value: "dr"
+              volumeMounts:
+                - name: media
+                  mountPath: /media
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "1"
+          volumes:
+            - name: media
+              nfs:
+                server: 192.168.10.249
+                path: /mnt/hdd/jellystorage
