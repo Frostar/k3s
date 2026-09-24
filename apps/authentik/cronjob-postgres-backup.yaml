@@ -21,8 +21,14 @@ spec:
             fsGroup: 1000
           containers:
           - name: postgres-backup
-            image: ghcr.io/frostar/postgre-backup:2.0.6
+            image: ghcr.io/frostar/postgre-backup:2.1.0
             env:
+            - name: HEARTBEAT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: kuma-heartbeat
+                  key: postgres-backup
+                  optional: true
             - name: PGHOST
               value: postgresql.authentik.svc.cluster.local
             - name: PGUSER

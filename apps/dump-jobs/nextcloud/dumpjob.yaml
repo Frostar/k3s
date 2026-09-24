@@ -20,8 +20,14 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: postgres-backup
-            image: ghcr.io/frostar/postgre-backup:2.0.6
+            image: ghcr.io/frostar/postgre-backup:2.1.0
             env:
+            - name: HEARTBEAT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: kuma-heartbeat
+                  key: nextcloud
+                  optional: true
             - name: PGHOST
               valueFrom:
                 secretKeyRef:
