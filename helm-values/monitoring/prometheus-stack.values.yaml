@@ -100,16 +100,17 @@ prometheus:
             labels:
               node: hoothoot
     podMonitorSelectorNilUsesHelmValues: false
-    # WAL replay on the Pis + Longhorn can take >15 min (default startup probe
-    # window); give Prometheus up to 1h to start before it gets killed.
-    maximumStartupDurationSeconds: 3600
+    # WAL replay on the Pis + Longhorn is slow (~20-30s per 128MB segment when
+    # throttled at 1 CPU), and a few days of crash-looping grows the WAL past
+    # what 1h can replay. Give Prometheus up to 4h to start before it is killed.
+    maximumStartupDurationSeconds: 14400
     resources:
       limits:
-        cpu: 1000m
-        memory: 1Gi
+        cpu: 2000m
+        memory: 2Gi
       requests:
-        cpu: 250m
-        memory: 512Mi
+        cpu: 500m
+        memory: 1Gi
     retention: 15d
     retentionSize: 36GB
     ruleSelectorNilUsesHelmValues: false
