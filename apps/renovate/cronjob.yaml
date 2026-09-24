@@ -17,7 +17,24 @@ spec:
           containers:
             - name: renovate
               image: docker.io/renovate/renovate:44.108.2
+              args:
+                - bash
+                - -c
+                - |
+                  renovate; rc=$?
+                  if [ -n "${HEARTBEAT_URL:-}" ]; then
+                    [ "$rc" -eq 0 ] && s=up || s=down
+                    curl -fsS -m 30 "${HEARTBEAT_URL}?status=${s}&msg=exit_${rc}" >/dev/null \
+                      || echo "warning: heartbeat push failed" >&2
+                  fi
+                  exit $rc
               env:
+                - name: HEARTBEAT_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: kuma-heartbeat
+                      key: renovate
+                      optional: true
                 - name: RENOVATE_TOKEN
                   valueFrom:
                     secretKeyRef:
