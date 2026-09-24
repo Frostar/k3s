@@ -1,0 +1,89 @@
+# Watchdog script: verifies that a Longhorn recurring backup job produced
+# a recent Completed backup and pushes the result to an Uptime Kuma push
+# monitor. Longhorn's own backup CronJobs are reconciled by longhorn-manager
+# and cannot be modified to push heartbeats themselves.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-watchdog
+  namespace: longhorn-system
+data:
+  watchdog.py: |
+    #!/usr/bin/env python3
+    """Check Longhorn Backup CRs for a recent completed backup created by
+    the recurring job JOB_NAME (status.labels.RecurringJob) and push
+    up/down to the Uptime Kuma push monitor at HEARTBEAT_URL.
+
+    Env: JOB_NAME (required), MAX_AGE_HOURS (default 26), HEARTBEAT_URL.
+    Exits non-zero when no recent completed backup exists.
+    """
+    import json
+    import os
+    import ssl
+    import sys
+    import urllib.parse
+    import urllib.request
+    from datetime import datetime, timedelta, timezone
+
+    SA = "/var/run/secrets/kubernetes.io/serviceaccount"
+
+
+    def api_get(path: str):
+        with open(f"{SA}/token") as f:
+            token = f.read()
+        ctx = ssl.create_default_context(cafile=f"{SA}/ca.crt")
+        req = urllib.request.Request(
+            f"https://kubernetes.default.svc{path}",
+            headers={"Authorization": f"Bearer {token}"})
+        with urllib.request.urlopen(req, timeout=30, context=ctx) as r:
+            return json.load(r)
+
+
+    def push(status: str, msg: str) -> None:
+        url = os.environ.get("HEARTBEAT_URL")
+        if not url:
+            return
+        query = urllib.parse.urlencode({"status": status, "msg": msg})
+        try:
+            urllib.request.urlopen(f"{url}?{query}", timeout=30)
+            print(f"heartbeat pushed ({status}): {msg}")
+        except OSError as e:
+            print(f"warning: heartbeat push failed: {e}", file=sys.stderr)
+
+
+    def main() -> None:
+        job = os.environ["JOB_NAME"]
+        max_age = timedelta(hours=float(os.environ.get("MAX_AGE_HOURS", "26")))
+        now = datetime.now(timezone.utc)
+
+        backups = api_get("/apis/longhorn.io/v1beta2"
+                          "/namespaces/longhorn-system/backups")
+        recent, newest = 0, None
+        for b in backups.get("items", []):
+            st = b.get("status", {})
+            if st.get("labels", {}).get("RecurringJob") != job:
+                continue
+            if st.get("state") != "Completed":
+                continue
+            ts = st.get("backupCreatedAt")
+            if not ts:
+                continue
+            t = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            if newest is None or t > newest:
+                newest = t
+            if now - t <= max_age:
+                recent += 1
+
+        newest_s = f"{newest:%Y-%m-%d %H:%M}Z" if newest else "never"
+        if recent:
+            print(f"{job}: {recent} completed backup(s) in the last "
+                  f"{max_age}, newest {newest_s}")
+            push("up", f"{recent} backups, newest {newest_s}")
+            sys.exit(0)
+        print(f"{job}: NO completed backup in the last {max_age} "
+              f"(newest: {newest_s})", file=sys.stderr)
+        push("down", f"no completed backup since {newest_s}")
+        sys.exit(1)
+
+
+    main()

@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn-watchdog
+  namespace: argocd
+spec:
+  project: homelab
+  source:
+    repoURL: https://github.com/Frostar/k3s
+    targetRevision: HEAD
+    path: apps/longhorn-watchdog
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
