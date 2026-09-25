@@ -21,7 +21,7 @@ spec:
           serviceAccountName: backup-watchdog
           containers:
             - name: watchdog
-              image: python:3.13-alpine
+              image: python:3.14-alpine
               command: ["python3", "/scripts/watchdog.py"]
               env:
                 - name: JOB_NAME
