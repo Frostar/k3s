@@ -54,6 +54,8 @@ grafana:
   adminPassword: admin
   adminUser: admin
   defaultDashboardsEnabled: true
+  deploymentStrategy:
+    type: Recreate
   enabled: true
   persistence:
     accessModes:
