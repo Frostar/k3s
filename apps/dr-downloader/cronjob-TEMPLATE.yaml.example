@@ -31,7 +31,7 @@ spec:
   schedule: "0 7 * * *"
   timeZone: "Europe/Copenhagen"
   concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
