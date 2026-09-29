@@ -1,4 +1,5 @@
-# Chart: longhorn/longhorn 1.13.0 (repo https://charts.longhorn.io)
+# renovate: datasource=helm depName=longhorn registryUrl=https://charts.longhorn.io
+# chart-version: 1.13.0
 # NOTE: the Argo app is a directory source over this dir — this values file is
 # NOT consumed by Argo. Upgrade procedure (sequential minors only!):
 #   helm template longhorn longhorn/longhorn --version <ver> -n longhorn-system \
