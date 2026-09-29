@@ -1,3 +1,11 @@
+# Chart: longhorn/longhorn 1.11.3 (repo https://charts.longhorn.io)
+# NOTE: the Argo app is a directory source over this dir — this values file is
+# NOT consumed by Argo. Upgrade procedure (sequential minors only!):
+#   helm template longhorn longhorn/longhorn --version <ver> -n longhorn-system \
+#     -f longhorn.values.yaml
+# then split helm hooks: run pre-upgrade Job first, apply main, run post-upgrade
+# Job, delete jobs. Exclude the pre-delete (uninstall) hook. Temporarily set
+# concurrent-automatic-engine-upgrade-per-node-limit=3 for live engine upgrades.
 defaultSettings:
   defaultDataPath: /storage1
   createDefaultDiskLabeledNodes: true
