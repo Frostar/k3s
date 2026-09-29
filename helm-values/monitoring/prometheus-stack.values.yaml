@@ -1,3 +1,7 @@
+# Rendered with: prometheus-community/kube-prometheus-stack 91.8.2
+# No live Helm release — update procedure: helm template with this file at the
+# pinned version above, apply CRDs server-side, kubectl diff, kubectl apply
+# (strip helm.sh/hook test resources), then delete orphaned resources.
 alertmanager:
   alertmanagerSpec:
     storage:
