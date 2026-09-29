@@ -1,4 +1,4 @@
-# Chart: longhorn/longhorn 1.11.3 (repo https://charts.longhorn.io)
+# Chart: longhorn/longhorn 1.12.1 (repo https://charts.longhorn.io)
 # NOTE: the Argo app is a directory source over this dir — this values file is
 # NOT consumed by Argo. Upgrade procedure (sequential minors only!):
 #   helm template longhorn longhorn/longhorn --version <ver> -n longhorn-system \
@@ -11,3 +11,9 @@ defaultSettings:
   createDefaultDiskLabeledNodes: true
   backupTarget: s3://longhorn@dummyregion/
   backupTargetCredentialSecret: backup-secret
+networkPolicies:
+  # New in chart 1.12: internal-traffic NetworkPolicies render even with
+  # enabled=false. Keep off to preserve pre-1.12 behavior — k3s enforces
+  # netpols and the iSCSI data path includes host-originated traffic that
+  # these podSelector-only policies could block. Revisit deliberately.
+  restrictInternalTraffic: false
