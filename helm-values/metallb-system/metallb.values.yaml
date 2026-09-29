@@ -1,3 +1,7 @@
+# L2-only cluster: no BGP, so neither legacy FRR mode nor the frr-k8s
+# backend (default-on since chart 0.16) is needed.
 speaker:
   frr:
-    enabled: true
+    enabled: false
+frrk8s:
+  enabled: false
