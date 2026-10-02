@@ -16,7 +16,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: renovate
-              image: docker.io/renovate/renovate:44.126.1
+              image: docker.io/renovate/renovate:44.131.4
               args:
                 - bash
                 - -c
