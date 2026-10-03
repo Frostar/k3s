@@ -1,5 +1,5 @@
 # renovate: datasource=helm depName=kube-prometheus-stack registryUrl=https://prometheus-community.github.io/helm-charts
-# chart-version: 91.8.2
+# chart-version: 91.9.0
 # No live Helm release — update procedure: helm template with this file at the
 # pinned version above, apply CRDs server-side, kubectl diff, kubectl apply
 # (strip helm.sh/hook test resources), then delete orphaned resources.
