@@ -44,9 +44,19 @@ spec:
                   value: "100"
                 # TVDB's Danish translation list has gaps; map DR titles
                 # to [season, episode] manually here when the job logs
-                # "no TVDB match".
+                # "no TVDB match". Note: skipped episodes do NOT fail the
+                # job or the heartbeat — check with a DRY_RUN=1 job when
+                # DR shows episodes that never arrive. (TVDB lacks Danish
+                # titles for S3E26-E33 as of 2026-10.)
                 - name: TITLE_ALIASES
-                  value: '{"skak": [3, 11]}'
+                  value: >-
+                    {"skak": [3, 11],
+                     "stopdans": [3, 27],
+                     "historier": [3, 28],
+                     "hånddukker": [3, 29],
+                     "skildpaddedreng": [3, 30],
+                     "heldragter": [3, 31],
+                     "håndværkere": [3, 32]}
               volumeMounts:
                 - name: media
                   mountPath: /media
