@@ -24,7 +24,7 @@ spec:
             - name: ghcr-pull-secret
           containers:
             - name: dr-downloader
-              image: ghcr.io/frostar/dr-downloader:1.0.3
+              image: ghcr.io/frostar/dr-downloader:1.0.4
               env:
                 - name: HEARTBEAT_URL
                   valueFrom:
@@ -45,8 +45,10 @@ spec:
                 # Titles TVDB has not translated yet fall back to DR's own
                 # number (image >= 1.0.3). Only alias titles the job still
                 # logs as "no TVDB match" (i.e. DR's number disagrees with
-                # TVDB's Danish title at that position). Skips do not fail
-                # the job; the heartbeat message carries skipped=N.
+                # TVDB's Danish title at that position); the file is then
+                # named with DR's title. Skips do not fail the job; the
+                # heartbeat message carries skipped=N.
+                # skak: TVDB has the typo "Skakt" for S3E11.
                 - name: TITLE_ALIASES
                   value: '{"skak": [3, 11]}'
               volumeMounts:
