@@ -9,6 +9,9 @@ metadata:
     metallb.universe.tf/loadBalancerIPs: 192.168.10.132
 spec:
   type: LoadBalancer
+  # Local preserves the sender's source IP, which the Alloy config uses to
+  # disambiguate the two TrueNAS hosts (both report hostname "truenas").
+  externalTrafficPolicy: Local
   selector:
     app: alloy-syslog
   ports:
