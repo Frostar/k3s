@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy-syslog
+  namespace: monitoring
+  labels:
+    app: alloy-syslog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alloy-syslog
+  template:
+    metadata:
+      labels:
+        app: alloy-syslog
+    spec:
+      securityContext:
+        runAsUser: 473
+        runAsGroup: 473
+        runAsNonRoot: true
+      containers:
+        - name: alloy
+          image: grafana/alloy:v1.20.1
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/tmp/alloy-data
+            - --server.http.listen-addr=0.0.0.0:12345
+          ports:
+            - name: http
+              containerPort: 12345
+            - name: syslog-udp
+              containerPort: 1514
+              protocol: UDP
+            - name: syslog-tcp
+              containerPort: 1601
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+      volumes:
+        - name: config
+          configMap:
+            name: alloy-syslog

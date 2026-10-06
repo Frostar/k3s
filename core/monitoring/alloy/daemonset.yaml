@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: alloy-logs
+  namespace: monitoring
+  labels:
+    app: alloy-logs
+spec:
+  selector:
+    matchLabels:
+      app: alloy-logs
+  template:
+    metadata:
+      labels:
+        app: alloy-logs
+    spec:
+      serviceAccountName: alloy-logs
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: alloy
+          image: grafana/alloy:v1.20.1
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/var/lib/alloy/data
+            - --server.http.listen-addr=0.0.0.0:12345
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - name: http
+              containerPort: 12345
+          # Runs as root (image default): required to read the systemd journal
+          # at /run/log/journal and /var/log/journal on the host.
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+            - name: data
+              mountPath: /var/lib/alloy/data
+            - name: journal-var
+              mountPath: /var/log/journal
+              readOnly: true
+            - name: journal-run
+              mountPath: /run/log/journal
+              readOnly: true
+            - name: machine-id
+              mountPath: /etc/machine-id
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: alloy-logs
+        - name: data
+          hostPath:
+            path: /var/lib/alloy/data
+            type: DirectoryOrCreate
+        - name: journal-var
+          hostPath:
+            path: /var/log/journal
+            type: ""
+        - name: journal-run
+          hostPath:
+            path: /run/log/journal
+            type: ""
+        - name: machine-id
+          hostPath:
+            path: /etc/machine-id
+            type: File
