@@ -14,6 +14,8 @@ data:
 
     // Receives syslog from espeon + umbreon (TrueNAS native forwarding)
     // and hoothoot (rsyslog) via the MetalLB LoadBalancer 192.168.10.132:514.
+    // RFC5424: TrueNAS syslog-ng uses the IETF syslog() destination, and
+    // hoothoot's rsyslog forwards with RSYSLOG_SyslogProtocol23Format.
     loki.relabel "syslog" {
       forward_to = []
       rule {
@@ -38,14 +40,14 @@ data:
       listener {
         address                = "0.0.0.0:1514"
         protocol               = "udp"
-        syslog_format          = "rfc3164"
+        syslog_format          = "rfc5424"
         use_incoming_timestamp = true
         labels                 = { job = "syslog" }
       }
       listener {
         address                = "0.0.0.0:1601"
         protocol               = "tcp"
-        syslog_format          = "rfc3164"
+        syslog_format          = "rfc5424"
         use_incoming_timestamp = true
         labels                 = { job = "syslog" }
       }
