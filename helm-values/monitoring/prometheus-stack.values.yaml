@@ -112,6 +112,15 @@ grafana:
       label: grafana_dashboard
       labelValue: "1"
       searchNamespace: ALL
+    datasources:
+      enabled: true
+      label: grafana_datasource
+      labelValue: "1"
+      # one-shot init container writes datasource files before Grafana starts —
+      # the runtime reload API 401s (no usable local admin credentials), so a
+      # watch sidecar can never hot-reload; datasource changes need a pod restart
+      initDatasources: true
+      watchMethod: LIST
 kubeStateMetrics:
   enabled: true
   resources:
