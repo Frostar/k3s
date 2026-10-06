@@ -22,6 +22,20 @@ data:
         source_labels = ["__syslog_message_hostname"]
         target_label  = "host"
       }
+      // Both TrueNAS boxes report hostname "truenas" — disambiguate by
+      // source IP so espeon/umbreon are distinguishable in queries.
+      rule {
+        source_labels = ["__syslog_connection_ip_address"]
+        regex         = "192\\.168\\.10\\.246"
+        target_label  = "host"
+        replacement   = "espeon"
+      }
+      rule {
+        source_labels = ["__syslog_connection_ip_address"]
+        regex         = "192\\.168\\.10\\.249"
+        target_label  = "host"
+        replacement   = "umbreon"
+      }
       rule {
         source_labels = ["__syslog_message_app_name"]
         target_label  = "app"
