@@ -67,7 +67,7 @@ data:
       }
     }
 
-    loki.source.journald "node" {
+    loki.source.journal "node" {
       labels = {
         job  = "journald",
         node = sys.env("NODE_NAME"),
