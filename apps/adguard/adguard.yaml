@@ -68,11 +68,26 @@ spec:
         - containerPort: 80
           name: http
           protocol: TCP
+        - containerPort: 443
+          name: https-doh
+          protocol: TCP
+        - containerPort: 853
+          name: dns-tls
+          protocol: TCP
+        - containerPort: 853
+          name: dns-quic
+          protocol: UDP
         volumeMounts:
         - name: conf
           mountPath: /opt/adguardhome/conf
         - name: work
           mountPath: /opt/adguardhome/work
+        # Cert for DoH/DoT — reuses the cert-manager secret issued for the
+        # adguard.lunding.xyz Ingress below. AdGuard's encryption settings
+        # (Settings → Encryption) point at /certs/tls.crt + /certs/tls.key.
+        - name: tls-cert
+          mountPath: /certs
+          readOnly: true
         resources:
           requests:
             memory: "128Mi"
@@ -87,6 +102,9 @@ spec:
       - name: work
         persistentVolumeClaim:
           claimName: adguard-work
+      - name: tls-cert
+        secret:
+          secretName: adguard-lunding-tls
 ---
 # Fixed IP LoadBalancer for DNS — point devices and UniFi DHCP at 192.168.10.131
 apiVersion: v1
@@ -118,6 +136,18 @@ spec:
     targetPort: 3000
     protocol: TCP
     name: setup
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https-doh
+  - port: 853
+    targetPort: 853
+    protocol: TCP
+    name: dns-tls
+  - port: 853
+    targetPort: 853
+    protocol: UDP
+    name: dns-quic
 ---
 # ClusterIP for web admin UI — fronted by the Ingress below.
 apiVersion: v1
