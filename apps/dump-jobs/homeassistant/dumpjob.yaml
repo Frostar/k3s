@@ -20,7 +20,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: postgres-backup
-            image: ghcr.io/frostar/postgre-backup:2.1.0
+            image: ghcr.io/frostar/postgre-backup:2.1.1
             env:
             - name: HEARTBEAT_URL
               valueFrom:
@@ -88,7 +88,7 @@ spec:
                 cpu: "500m"
             securityContext:
               runAsNonRoot: true
-              runAsUser: 1000
+              runAsUser: 65532
               allowPrivilegeEscalation: false
           securityContext:
-            fsGroup: 1000
+            fsGroup: 65532
