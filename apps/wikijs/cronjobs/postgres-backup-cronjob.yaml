@@ -84,8 +84,8 @@ spec:
                 cpu: "500m"
             securityContext:
               runAsNonRoot: true
-              runAsUser: 1000
+              runAsUser: 65532
               allowPrivilegeEscalation: false
           securityContext:
-            fsGroup: 1000
+            fsGroup: 65532
 
