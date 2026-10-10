@@ -40,6 +40,13 @@ spec:
       template:
         spec:
           restartPolicy: Never
+          # The NFS share is owned by 3000:3000 and Kubernetes does not apply
+          # fsGroup to NFS volumes, so run as the share's owner (the image
+          # itself defaults to the DHI nonroot uid 65532).
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 3000
+            runAsGroup: 3000
           imagePullSecrets:
             - name: ghcr-pull-secret
           containers:
