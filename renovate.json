@@ -59,11 +59,18 @@
       "groupSlug": "all-non-major"
     },
     {
-      "description": "Renovate bumps itself almost daily — automerge minor/patch straight to main (no PR). No CI checks exist, hence ignoreTests; the Uptime Kuma heartbeat flags a broken release",
+      "description": "Docker Hub returns no release timestamps for renovate/renovate (anonymous tags API 403s past offset 1000), so minimumReleaseAge would hold it forever (timestamp-required). Look versions up on npm instead: same version numbers, with publish timestamps",
+      "matchDepNames": ["docker.io/renovate/renovate"],
+      "overrideDatasource": "npm",
+      "overridePackageName": "renovate"
+    },
+    {
+      "description": "Renovate bumps itself almost daily — automerge minor/patch straight to main (no PR), but only releases at least 3 days old so a bad or compromised release has time to be yanked. No CI checks exist, hence ignoreTests; the Uptime Kuma heartbeat flags a broken release",
       "matchDepNames": ["docker.io/renovate/renovate"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "renovate",
       "groupSlug": "renovate",
+      "minimumReleaseAge": "3 days",
       "automerge": true,
       "automergeType": "branch",
       "ignoreTests": true
