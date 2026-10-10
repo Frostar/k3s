@@ -1,10 +1,17 @@
 #!/bin/bash
-# Pre-push security check for Claude Code
+# Pre-push security check for Claude Code and GitHub Copilot CLI
 # Scans files in commits about to be pushed for cleartext secrets
 # and Kubernetes/YAML security misconfigurations.
 #
+# Wired up via .claude/settings.json (PreToolUse / Bash). Copilot CLI reads that
+# file too and, for the PascalCase `PreToolUse` event, sends the same
+# Claude-shaped payload — so one hook serves both tools.
+#
 # Input:  stdin JSON {"tool_name":"Bash","tool_input":{"command":"..."}}
-# Output: JSON {"continue":false,"stopReason":"..."} on findings, else silent exit 0
+# Output: on findings, a single JSON object carrying both tools' block fields:
+#           Claude Code  -> {"continue":false,"stopReason":"..."}
+#           Copilot CLI  -> {"permissionDecision":"deny","permissionDecisionReason":"..."}
+#         Each tool ignores the other's keys. Silent exit 0 otherwise.
 
 set -euo pipefail
 
@@ -15,8 +22,8 @@ d = json.load(sys.stdin)
 print(d.get('tool_input', {}).get('command', ''))
 " 2>/dev/null || echo "")
 
-# Only act on git push
-if ! echo "$CMD" | grep -qE '^git push'; then
+# Only act on git push (also when chained, e.g. `cd k3s && git push`, as Copilot often does)
+if ! echo "$CMD" | grep -qE '(^|&&|;)\s*git push'; then
   exit 0
 fi
 
@@ -135,6 +142,13 @@ msg = ('Security check BLOCKED push — findings in commits about to be pushed:\
        + '\n  - Encrypt secrets with SOPS: sops -e -i <file>'
        + '\n  - Remove private keys; regenerate and use sealed secrets or SOPS'
        + '\n  - Fix security misconfigurations in pod specs')
-print(json.dumps({'continue': False, 'stopReason': msg}))
+print(json.dumps({
+    # Claude Code
+    'continue': False,
+    'stopReason': msg,
+    # GitHub Copilot CLI
+    'permissionDecision': 'deny',
+    'permissionDecisionReason': msg,
+}))
 " "$ISSUES"
 fi

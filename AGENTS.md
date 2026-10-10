@@ -24,7 +24,7 @@ This repo manages a personal k3s cluster with GitOps. Keep everything reproducib
 
 **This repository is public.** Anyone on the internet can read every file in git history. Never commit plaintext secrets, tokens, passwords, or private keys — not even temporarily. All secrets must be SOPS-encrypted before they touch the repo. ArgoCD pulls from this repo without credentials precisely because it is public; if it is ever made private, ArgoCD deploy keys will need to be configured.
 
-A Claude Code pre-push hook (`.claude/hooks/pre-push-security-check.sh`) runs automatically before every `git push`. It will **block the push** if it finds:
+A pre-push hook (`.claude/hooks/pre-push-security-check.sh`, wired up in `.claude/settings.json`) runs automatically before every `git push` issued by an agent. It works in both **Claude Code** and **GitHub Copilot CLI** — Copilot reads `.claude/settings.json` hooks natively, and the script emits both tools' block formats. It only fires when the agent is started inside this repo (`k3s/`), not from a parent directory. It will **block the push** if it finds:
 
 - Cleartext private keys or credentials
 - Kubernetes `Secret` manifests with unencrypted `data`/`stringData` (must be SOPS-encrypted)
