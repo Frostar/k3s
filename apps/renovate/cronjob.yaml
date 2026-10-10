@@ -55,10 +55,13 @@ spec:
                   value: "false"
                 - name: RENOVATE_GIT_AUTHOR
                   value: "Renovate Bot <renovate@j-frost.dk>"
+              # Generous limits: at 500m the pod was throttled 90-98% during lookups,
+              # starving Node's event loop so large Docker Hub tag lists (grafana/loki)
+              # failed with non-retried socket errors -> "Failed to look up ... no-result".
               resources:
                 requests:
-                  memory: "256Mi"
-                  cpu: "100m"
-                limits:
-                  memory: "1Gi"
+                  memory: "512Mi"
                   cpu: "500m"
+                limits:
+                  memory: "2Gi"
+                  cpu: "2"
