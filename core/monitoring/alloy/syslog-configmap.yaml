@@ -36,6 +36,14 @@ data:
         target_label  = "host"
         replacement   = "umbreon"
       }
+      // The Home Assistant Pi still reports hostname "homeassistant" until
+      // the rotom rename lands — map it by source IP like the NAS boxes.
+      rule {
+        source_labels = ["__syslog_connection_ip_address"]
+        regex         = "192\\.168\\.10\\.208"
+        target_label  = "host"
+        replacement   = "rotom"
+      }
       rule {
         source_labels = ["__syslog_message_app_name"]
         target_label  = "app"
