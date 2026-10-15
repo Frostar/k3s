@@ -40,6 +40,18 @@
       "depNameTemplate": "k3s-io/k3s",
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+k3s(?<build>\\d+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "Track the Renovate image tag via npm (same version numbers, with publish timestamps — Docker Hub gives none for renovate/renovate, so minimumReleaseAge would hold it forever). A regex manager, not the kubernetes manager + overrideDatasource: npm releases carry newDigest = dist.integrity (sha512-…), which the kubernetes manager appends as '@<digest>', producing an InvalidImageName. Without a currentDigest capture or autoReplaceStringTemplate only the tag is replaced",
+      "managerFilePatterns": [
+        "/^apps/renovate/cronjob\\.yaml$/"
+      ],
+      "matchStrings": [
+        "image:\\s*(?<depName>docker\\.io/renovate/renovate):(?<currentValue>[^\\s@]+)"
+      ],
+      "datasourceTemplate": "npm",
+      "packageNameTemplate": "renovate"
     }
   ],
   "packageRules": [
@@ -59,10 +71,10 @@
       "groupSlug": "all-non-major"
     },
     {
-      "description": "Docker Hub returns no release timestamps for renovate/renovate (anonymous tags API 403s past offset 1000), so minimumReleaseAge would hold it forever (timestamp-required). Look versions up on npm instead: same version numbers, with publish timestamps",
+      "description": "The Renovate image is tracked by the npm regex custom manager above — keep the kubernetes manager off it so it doesn't propose a Docker Hub-based update for the same line",
+      "matchManagers": ["kubernetes"],
       "matchDepNames": ["docker.io/renovate/renovate"],
-      "overrideDatasource": "npm",
-      "overridePackageName": "renovate"
+      "enabled": false
     },
     {
       "description": "Renovate bumps itself almost daily — automerge minor/patch straight to main (no PR), but only releases at least 3 days old so a bad or compromised release has time to be yanked. No CI checks exist, hence ignoreTests; the Uptime Kuma heartbeat flags a broken release",
