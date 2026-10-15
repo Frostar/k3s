@@ -4,7 +4,31 @@
 # pinned version above, apply CRDs server-side, kubectl diff, kubectl apply
 # (strip helm.sh/hook test resources), then delete orphaned resources.
 alertmanager:
+  # Dead-man's switch: the always-firing Watchdog alert pings an Uptime Kuma
+  # push monitor on hoothoot (outside the cluster) every ~1-2 min; Kuma mails
+  # if no ping arrives for 10 min. The push URL (contains the token) lives in
+  # the SOPS secret secrets/monitoring/kuma-heartbeat.enc.yaml, mounted via
+  # alertmanagerSpec.secrets and read with url_file. All other alerts still
+  # go to "null". Lists replace the chart defaults; the remaining config keys
+  # (global, inhibit_rules, templates, route defaults) come from the chart.
+  config:
+    route:
+      routes:
+      - receiver: kuma-watchdog
+        matchers:
+        - alertname = "Watchdog"
+        group_wait: 0s
+        group_interval: 1m
+        repeat_interval: 1m
+    receivers:
+    - name: "null"
+    - name: kuma-watchdog
+      webhook_configs:
+      - url_file: /etc/alertmanager/secrets/kuma-heartbeat/watchdog
+        send_resolved: false
   alertmanagerSpec:
+    secrets:
+    - kuma-heartbeat
     storage:
       volumeClaimTemplate:
         spec:
