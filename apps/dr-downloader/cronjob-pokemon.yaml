@@ -31,7 +31,7 @@ spec:
             - name: ghcr-pull-secret
           containers:
             - name: dr-downloader
-              image: ghcr.io/frostar/dr-downloader:1.2.1
+              image: ghcr.io/frostar/dr-downloader:1.3.0
               env:
                 - name: HEARTBEAT_URL
                   valueFrom:
@@ -47,6 +47,10 @@ spec:
                   value: "tvmaze_en"
                 - name: TVMAZE_ID
                   value: "590"
+                # TVmaze episodes DR doesn't have (S21E21 was never dubbed);
+                # later DR episodes in that season shift up one number.
+                - name: TVMAZE_SKIP
+                  value: "[[21, 21]]"
                 - name: SEASON_DIR_PATTERN
                   value: "pkmns{N}"
               volumeMounts:
