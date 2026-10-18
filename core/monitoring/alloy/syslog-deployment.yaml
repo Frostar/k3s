@@ -36,6 +36,9 @@ spec:
             - name: syslog-tcp
               containerPort: 1601
               protocol: TCP
+            - name: loki-push
+              containerPort: 3500
+              protocol: TCP
           readinessProbe:
             httpGet:
               path: /-/ready

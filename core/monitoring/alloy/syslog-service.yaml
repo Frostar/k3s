@@ -23,3 +23,8 @@ spec:
       port: 514
       targetPort: syslog-tcp
       protocol: TCP
+    # Loki push API for the per-NAS Alloy apps (TrueNAS container logs).
+    - name: loki-push
+      port: 3500
+      targetPort: loki-push
+      protocol: TCP
