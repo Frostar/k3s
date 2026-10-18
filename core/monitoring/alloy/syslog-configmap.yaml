@@ -77,6 +77,19 @@ data:
       forward_to    = [loki.write.default.receiver]
     }
 
+    // Loki push API for the Alloy custom app on each TrueNAS box, which ships
+    // Docker container (TrueNAS app) logs read from the local Docker socket.
+    // Senders set their own labels (job="docker", host, app, service,
+    // container); keep their timestamps so backfilled lines land correctly.
+    loki.source.api "nas" {
+      http {
+        listen_address = "0.0.0.0"
+        listen_port    = 3500
+      }
+      use_incoming_timestamp = true
+      forward_to             = [loki.write.default.receiver]
+    }
+
     loki.write "default" {
       endpoint {
         url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
