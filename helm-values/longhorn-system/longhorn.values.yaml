@@ -18,3 +18,17 @@ networkPolicies:
   # netpols and the iSCSI data path includes host-originated traffic that
   # these podSelector-only policies could block. Revisit deliberately.
   restrictInternalTraffic: false
+csi:
+  # Chart default is 3 per sidecar — overkill on a 4-node cluster. These are
+  # leader-elected control-plane pods (no data path); 2 keeps one warm standby
+  # so attach/provision/resize/snapshot ops fail over instantly on node loss.
+  attacherReplicaCount: 2
+  provisionerReplicaCount: 2
+  resizerReplicaCount: 2
+  snapshotterReplicaCount: 2
+longhornGlobalManager:
+  # 1 active leader + 1 warm standby (chart default 3).
+  replicas: 2
+longhornUI:
+  # Stateless dashboard; no HA needed (chart default 2).
+  replicas: 1
