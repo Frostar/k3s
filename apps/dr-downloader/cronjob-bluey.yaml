@@ -56,8 +56,10 @@ spec:
                 # named with DR's title. Skips do not fail the job; the
                 # heartbeat message carries skipped=N.
                 # skak: TVDB has the typo "Skakt" for S3E11.
+                # overraskelse: DR numbers "Surprise!" S3E49, but TVDB has
+                # "The Sign"/"Skiltet" there — it is TVDB S3E50 (untranslated).
                 - name: TITLE_ALIASES
-                  value: '{"skak": [3, 11]}'
+                  value: '{"skak": [3, 11], "overraskelse": [3, 50]}'
               volumeMounts:
                 - name: media
                   mountPath: /media
