@@ -59,7 +59,7 @@ spec:
             - name: ghcr-pull-secret
           containers:
             - name: dr-downloader
-              image: ghcr.io/frostar/dr-downloader:1.4.0
+              image: ghcr.io/frostar/dr-downloader:1.5.0
               env:
                 - name: DR_SERIES_URL
                   value: "https://www.dr.dk/drtv/serie/<SHOW-SLUG>"
