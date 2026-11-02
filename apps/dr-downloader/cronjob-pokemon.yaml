@@ -33,7 +33,7 @@ spec:
             - name: ghcr-pull-secret
           containers:
             - name: dr-downloader
-              image: ghcr.io/frostar/dr-downloader:1.5.0
+              image: ghcr.io/frostar/dr-downloader:1.5.1
               env:
                 - name: HEARTBEAT_URL
                   valueFrom:
