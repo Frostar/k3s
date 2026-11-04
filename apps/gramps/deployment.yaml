@@ -1,0 +1,146 @@
+# Gramps Web (SQLite, single tree) + celery worker + ephemeral valkey broker
+# in one pod: the SQLite tree and media live on RWO Longhorn volumes, so
+# everything that touches them must share a node. Recreate avoids two pods
+# writing the same SQLite files during a rollout.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gramps
+  namespace: gramps
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gramps
+  template:
+    metadata:
+      labels:
+        app: gramps
+    spec:
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+      - name: mkdirs
+        image: ghcr.io/gramps-project/grampsweb:26.11.0
+        command:
+        - sh
+        - -c
+        - >-
+          mkdir -p /data/home /data/grampsdb /data/users /data/indexdir
+          /data/backups /data/persistent_cache
+          /cache/thumbnail /cache/request /cache/reports /cache/export
+        securityContext: &hardened
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            memory: 64Mi
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: cache
+          mountPath: /cache
+      # Native sidecar: started before, and stopped after, the app containers.
+      - name: valkey
+        image: valkey/valkey:9.1.3-alpine
+        restartPolicy: Always
+        command: ["valkey-server", "--save", "", "--appendonly", "no", "--bind", "127.0.0.1", "--port", "6379"]
+        securityContext: *hardened
+        startupProbe:
+          exec:
+            command: ["valkey-cli", "ping"]
+          periodSeconds: 2
+          failureThreshold: 15
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            memory: 128Mi
+      containers:
+      - name: web
+        image: ghcr.io/gramps-project/grampsweb:26.11.0
+        # Default entrypoint: runs user-DB migrations, then gunicorn on :5000.
+        envFrom: &env
+        - configMapRef:
+            name: gramps-env
+        - secretRef:
+            name: gramps-secrets
+        ports:
+        - name: http
+          containerPort: 5000
+          protocol: TCP
+        securityContext: *hardened
+        startupProbe:
+          httpGet:
+            path: /ready
+            port: http
+          periodSeconds: 10
+          failureThreshold: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          periodSeconds: 15
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 4
+        resources:
+          requests:
+            cpu: 250m
+            memory: 768Mi
+          limits:
+            memory: 2Gi
+        volumeMounts: &mounts
+        - name: data
+          mountPath: /data
+        - name: media
+          mountPath: /media
+        - name: cache
+          mountPath: /cache
+        - name: tmp
+          mountPath: /tmp
+      - name: celery
+        image: ghcr.io/gramps-project/grampsweb:26.11.0
+        # Bypass the entrypoint so only the web container runs migrations.
+        command: ["celery", "-A", "gramps_webapi.celery", "worker", "--loglevel=INFO", "--concurrency=1"]
+        envFrom: *env
+        securityContext: *hardened
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 1536Mi
+        volumeMounts: *mounts
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: gramps-data
+      - name: media
+        persistentVolumeClaim:
+          claimName: gramps-media
+      - name: cache
+        emptyDir:
+          sizeLimit: 4Gi
+      - name: tmp
+        emptyDir:
+          sizeLimit: 2Gi

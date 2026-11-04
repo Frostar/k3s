@@ -1,0 +1,35 @@
+# Users DB, SQLite family tree, search index, backups.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gramps-data
+  namespace: gramps
+  labels:
+    recurring-job.longhorn.io/daily-backup: enabled
+    recurring-job.longhorn.io/weekly-backup: enabled
+    recurring-job.longhorn.io/monthly-backup: enabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: longhorn
+---
+# Uploaded photos/documents.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gramps-media
+  namespace: gramps
+  labels:
+    recurring-job.longhorn.io/daily-backup: enabled
+    recurring-job.longhorn.io/weekly-backup: enabled
+    recurring-job.longhorn.io/monthly-backup: enabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: longhorn

@@ -1,0 +1,53 @@
+# Non-secret Gramps Web config, shared by the web and celery containers.
+# Secrets (secret key, OIDC client, SMTP password) come from the
+# gramps-secrets Secret in secrets/gramps/. Changes here need a pod restart.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gramps-env
+  namespace: gramps
+data:
+  # Non-root + read-only rootfs: move everything off /root and /app.
+  HOME: /tmp
+  GRAMPSHOME: /data/home
+  GRAMPS_DATABASE_PATH: /data/grampsdb
+  GRAMPSWEB_TREE: Familie
+  GRAMPSWEB_USER_DB_URI: sqlite:////data/users/users.sqlite
+  GRAMPSWEB_SEARCH_INDEX_DB_URI: sqlite:////data/indexdir/search_index.db
+  GRAMPSWEB_MEDIA_BASE_DIR: /media
+  GRAMPSWEB_BACKUP_DIR: /data/backups
+  GRAMPSWEB_BACKUP_KEEP: "10"
+  GRAMPSWEB_PERSISTENT_CACHE_CONFIG__CACHE_DIR: /data/persistent_cache
+  GRAMPSWEB_THUMBNAIL_CACHE_CONFIG__CACHE_DIR: /cache/thumbnail
+  GRAMPSWEB_REQUEST_CACHE_CONFIG__CACHE_DIR: /cache/request
+  GRAMPSWEB_REPORT_DIR: /cache/reports
+  GRAMPSWEB_EXPORT_DIR: /cache/export
+
+  GRAMPSWEB_BASE_URL: https://gramps.j-frost.dk
+  GRAMPSWEB_REGISTRATION_DISABLED: "true"
+  GRAMPSWEB_DISABLE_TELEMETRY: "true"
+  GUNICORN_NUM_WORKERS: "2"
+
+  # Celery broker + rate-limit storage: valkey sidecar on localhost.
+  GRAMPSWEB_CELERY_CONFIG__broker_url: redis://localhost:6379/0
+  GRAMPSWEB_CELERY_CONFIG__result_backend: redis://localhost:6379/0
+  GRAMPSWEB_RATELIMIT_STORAGE_URI: redis://localhost:6379/1
+
+  # Native OIDC via Authentik (app slug "gramps"); local login disabled.
+  # Role mapping is fail-closed: users in none of these groups are disabled.
+  GRAMPSWEB_OIDC_ENABLED: "true"
+  GRAMPSWEB_OIDC_ISSUER: https://auth.j-frost.dk/application/o/gramps/
+  GRAMPSWEB_OIDC_NAME: Authentik
+  GRAMPSWEB_OIDC_AUTO_REDIRECT: "true"
+  GRAMPSWEB_OIDC_DISABLE_LOCAL_AUTH: "true"
+  GRAMPSWEB_OIDC_GROUP_ADMIN: authentik Admins
+  GRAMPSWEB_OIDC_GROUP_OWNER: gramps-owners
+  GRAMPSWEB_OIDC_GROUP_EDITOR: gramps-editors
+  GRAMPSWEB_OIDC_GROUP_MEMBER: gramps-members
+
+  GRAMPSWEB_EMAIL_HOST: smtp.protonmail.ch
+  GRAMPSWEB_EMAIL_PORT: "587"
+  GRAMPSWEB_EMAIL_USE_SSL: "false"
+  GRAMPSWEB_EMAIL_USE_STARTTLS: "true"
+  GRAMPSWEB_EMAIL_HOST_USER: server@lunding.xyz
+  GRAMPSWEB_DEFAULT_FROM_EMAIL: server@lunding.xyz
