@@ -49,5 +49,5 @@ data:
   GRAMPSWEB_EMAIL_PORT: "587"
   GRAMPSWEB_EMAIL_USE_SSL: "false"
   GRAMPSWEB_EMAIL_USE_STARTTLS: "true"
-  GRAMPSWEB_EMAIL_HOST_USER: gramps@lunding.xyz
-  GRAMPSWEB_DEFAULT_FROM_EMAIL: gramps@lunding.xyz
+  GRAMPSWEB_EMAIL_HOST_USER: server@lunding.xyz
+  GRAMPSWEB_DEFAULT_FROM_EMAIL: server@lunding.xyz
