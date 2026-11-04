@@ -5,6 +5,8 @@ metadata:
   name: gramps-data
   namespace: gramps
   labels:
+    # Longhorn only copies recurring-job labels from PVC to volume with this.
+    recurring-job.longhorn.io/source: enabled
     recurring-job.longhorn.io/daily-backup: enabled
     recurring-job.longhorn.io/weekly-backup: enabled
     recurring-job.longhorn.io/monthly-backup: enabled
@@ -23,6 +25,8 @@ metadata:
   name: gramps-media
   namespace: gramps
   labels:
+    # Longhorn only copies recurring-job labels from PVC to volume with this.
+    recurring-job.longhorn.io/source: enabled
     recurring-job.longhorn.io/daily-backup: enabled
     recurring-job.longhorn.io/weekly-backup: enabled
     recurring-job.longhorn.io/monthly-backup: enabled
