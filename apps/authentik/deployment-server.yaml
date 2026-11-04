@@ -73,6 +73,9 @@ spec:
               name: authentik-secrets
         # Outgoing mail (recovery emails) via Proton SMTP as the shared homelab
         # sender. Explicit env overrides the legacy envFrom "authentik" Secret.
+        # The password key is required, so a new pod waits until
+        # secrets-authentik has synced it; RollingUpdate keeps the old pod
+        # serving meanwhile.
         - name: AUTHENTIK_EMAIL__HOST
           value: smtp.protonmail.ch
         - name: AUTHENTIK_EMAIL__PORT
@@ -90,7 +93,6 @@ spec:
             secretKeyRef:
               key: AUTHENTIK_EMAIL__PASSWORD
               name: authentik-secrets
-              optional: true
         - name: AUTHENTIK_LISTEN__HTTP
           value: 0.0.0.0:9000
         - name: AUTHENTIK_LISTEN__HTTPS
