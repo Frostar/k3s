@@ -20,6 +20,8 @@ spec:
         app: gramps
     spec:
       enableServiceLinks: false
+      # Don't rely on sa-hardening having synced before the first pod.
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -29,37 +31,16 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       initContainers:
-      - name: mkdirs
-        image: ghcr.io/gramps-project/grampsweb:26.11.0
-        command:
-        - sh
-        - -c
-        - >-
-          mkdir -p /data/home /data/grampsdb /data/users /data/indexdir
-          /data/backups /data/persistent_cache
-          /cache/thumbnail /cache/request /cache/reports /cache/export
-        securityContext: &hardened
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop: ["ALL"]
-        resources:
-          requests:
-            cpu: 10m
-            memory: 16Mi
-          limits:
-            memory: 64Mi
-        volumeMounts:
-        - name: data
-          mountPath: /data
-        - name: cache
-          mountPath: /cache
       # Native sidecar: started before, and stopped after, the app containers.
       - name: valkey
         image: valkey/valkey:9.1.3-alpine
         restartPolicy: Always
         command: ["valkey-server", "--save", "", "--appendonly", "no", "--bind", "127.0.0.1", "--port", "6379"]
-        securityContext: *hardened
+        securityContext: &hardened
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
         startupProbe:
           exec:
             command: ["valkey-cli", "ping"]
@@ -71,15 +52,46 @@ spec:
             memory: 32Mi
           limits:
             memory: 128Mi
-      containers:
-      - name: web
+      # Create the data dirs, then run the user-DB migration. Its create_app()
+      # also creates the "Familie" tree if missing, so this must finish before
+      # web and celery start; otherwise both would race to create the tree.
+      - name: init
         image: ghcr.io/gramps-project/grampsweb:26.11.0
-        # Default entrypoint: runs user-DB migrations, then gunicorn on :5000.
+        workingDir: /app/src
+        command:
+        - sh
+        - -c
+        - >-
+          mkdir -p /data/home /data/grampsdb /data/users /data/indexdir
+          /data/backups /data/persistent_cache
+          /cache/thumbnail /cache/request /cache/reports /cache/export
+          && exec python3 -m gramps_webapi --config /app/config/config.cfg user migrate
         envFrom: &env
         - configMapRef:
             name: gramps-env
         - secretRef:
             name: gramps-secrets
+        securityContext: *hardened
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            memory: 1Gi
+        volumeMounts: &mounts
+        - name: data
+          mountPath: /data
+        - name: media
+          mountPath: /media
+        - name: cache
+          mountPath: /cache
+        - name: tmp
+          mountPath: /tmp
+      containers:
+      - name: web
+        image: ghcr.io/gramps-project/grampsweb:26.11.0
+        # Default entrypoint: re-runs the (now no-op) migration, then gunicorn on :5000.
+        envFrom: *env
         ports:
         - name: http
           containerPort: 5000
@@ -109,15 +121,7 @@ spec:
             memory: 768Mi
           limits:
             memory: 2Gi
-        volumeMounts: &mounts
-        - name: data
-          mountPath: /data
-        - name: media
-          mountPath: /media
-        - name: cache
-          mountPath: /cache
-        - name: tmp
-          mountPath: /tmp
+        volumeMounts: *mounts
       - name: celery
         image: ghcr.io/gramps-project/grampsweb:26.11.0
         # Bypass the entrypoint so only the web container runs migrations.
