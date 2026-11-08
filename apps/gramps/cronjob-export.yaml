@@ -1,0 +1,180 @@
+# Nightly portable export of the "Familie" tree (Gramps XML, .gramps) to
+# MinIO, with an Uptime Kuma push heartbeat ("gramps export-job"). Complements
+# the Longhorn volume backups: the file imports into any Gramps install.
+# Media files (gramps-media) are not included; Longhorn backs those up.
+#
+# gramps-data is RWO, so the job must land on the gramps pod's node. It mounts
+# the volume read-only and copies the live SQLite DB with the online backup API
+# before exporting, so the running app is never touched.
+#
+# Objects: s3://databases/gramps/daily/familie-<Mon..Sun>.gramps (7-day ring)
+# and monthly/familie-YYYY-MM.gramps (written on the 1st, kept).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: gramps-export
+  namespace: gramps
+spec:
+  # After the Longhorn daily backup (03:00).
+  schedule: "15 4 * * *"
+  timeZone: "Europe/Copenhagen"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 1800
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: gramps-export
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          automountServiceAccountToken: false
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchLabels:
+                    app: gramps
+                topologyKey: kubernetes.io/hostname
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+          # Never fails the pod: records rc/log/count in /work/out so the
+          # upload container can push a "down" heartbeat with the reason.
+          - name: export
+            image: ghcr.io/gramps-project/grampsweb:26.11.1
+            command:
+            - sh
+            - -c
+            - |
+              mkdir -p /work/out
+              trap 'echo $? > /work/out/rc; exit 0' EXIT
+              exec > /work/out/export.log 2>&1
+              set -eu
+              src=/data/grampsdb/$TREE_ID
+              dst=$GRAMPSHOME/gramps/grampsdb/$TREE_ID
+              out=/work/out/familie.gramps
+              mkdir -p "$dst"
+              cp "$src/name.txt" "$src/database.txt" "$dst/"
+              python3 -c 'import sqlite3, sys
+              s = sqlite3.connect("file:" + sys.argv[1] + "?mode=ro", uri=True)
+              d = sqlite3.connect(sys.argv[2])
+              s.backup(d)
+              d.close()
+              s.close()' "$src/sqlite.db" "$dst/sqlite.db"
+              gramps -O "$(cat "$src/name.txt")" -e "$out"
+              # The CLI exits 0 even when it fails to write the file.
+              gzip -t "$out"
+              n=$(zcat "$out" | grep -c '<person ')
+              test "$n" -gt 0
+              echo "$n" > /work/out/count
+              ls -l "$out"
+            env:
+            - name: TREE_ID
+              value: "313842ea-7cd8-4c7e-a1e1-a1a0dd9489fa"
+            - name: GRAMPSHOME
+              value: /work/home
+            - name: HOME
+              value: /work/home
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 1000
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+            volumeMounts:
+            - name: data
+              mountPath: /data
+              readOnly: true
+            - name: work
+              mountPath: /work
+            - name: tmp
+              mountPath: /tmp
+          containers:
+          - name: upload
+            image: ghcr.io/frostar/postgre-backup:2.1.1
+            command:
+            - sh
+            - -c
+            - |
+              set -u
+              push() {
+                for i in 1 2 3; do
+                  wget -q -O /dev/null -T 30 "${HEARTBEAT_URL}?status=$1&msg=$2" && return 0
+                  sleep 10
+                done
+                echo "heartbeat push failed" >&2
+              }
+              cat /work/out/export.log
+              if [ "$(cat /work/out/rc 2>/dev/null)" != 0 ]; then
+                push down "export%20failed"
+                exit 1
+              fi
+              umask 077
+              printf '[default]\naccess_key = %s\nsecret_key = %s\nhost_base = %s\nhost_bucket = %s\nuse_https = False\n' \
+                "$BACKUP_S3_KEY" "$BACKUP_S3_SECRET" "$BACKUP_S3_HOST" "$BACKUP_S3_HOST" > /tmp/s3cfg
+              s3() { s3cmd -c /tmp/s3cfg --no-progress "$@"; }
+              f=/work/out/familie.gramps
+              if ! s3 put "$f" "${BACKUP_S3_PATH}daily/familie-$(date +%a).gramps"; then
+                push down "upload%20failed"
+                exit 1
+              fi
+              if [ "$(date +%d)" = 01 ] && ! s3 put "$f" "${BACKUP_S3_PATH}monthly/familie-$(date +%Y-%m).gramps"; then
+                push down "monthly%20upload%20failed"
+                exit 1
+              fi
+              push up "OK%20$(cat /work/out/count)%20people"
+            env:
+            - name: HEARTBEAT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: kuma-heartbeat
+                  key: gramps-export
+            - name: TZ
+              value: "Europe/Copenhagen"
+            envFrom:
+            - secretRef:
+                name: gramps-export-s3
+            securityContext:
+              runAsUser: 65532
+              runAsGroup: 65532
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+            volumeMounts:
+            - name: work
+              mountPath: /work
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: gramps-data
+              readOnly: true
+          - name: work
+            emptyDir:
+              sizeLimit: 1Gi
+          - name: tmp
+            emptyDir:
+              sizeLimit: 256Mi
