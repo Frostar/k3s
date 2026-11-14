@@ -48,7 +48,7 @@ spec:
           # Never fails the pod: records rc/log/count in /work/out so the
           # upload container can push a "down" heartbeat with the reason.
           - name: export
-            image: ghcr.io/gramps-project/grampsweb:26.11.1
+            image: ghcr.io/gramps-project/grampsweb:26.11.2
             command:
             - sh
             - -c
