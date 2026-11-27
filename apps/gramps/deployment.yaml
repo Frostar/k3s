@@ -33,7 +33,7 @@ spec:
       initContainers:
       # Native sidecar: started before, and stopped after, the app containers.
       - name: valkey
-        image: valkey/valkey:9.2.0-alpine
+        image: valkey/valkey:9.2.1-alpine
         restartPolicy: Always
         command: ["valkey-server", "--save", "", "--appendonly", "no", "--bind", "127.0.0.1", "--port", "6379"]
         securityContext: &hardened
